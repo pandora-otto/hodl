@@ -40,4 +40,4 @@ yarn-error.*
 /ios
 /android
 
-/services/coingecko.ts
+services/coingecko.ts

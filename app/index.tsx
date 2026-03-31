@@ -45,7 +45,7 @@ export default function WatchlistScreen() {
       {/* Column Labels */}
       {coinsWithPrices.length > 0 && (
         <View style={styles.columnLabels}>
-          <Text style={styles.label}>Coin</Text>
+          <Text style={styles.labelname}>Coin</Text>
           <View style={styles.labelRight}>
             <Text style={styles.label}>Price</Text>
             <Text style={styles.label}> 1H</Text>
@@ -140,12 +140,21 @@ const styles = StyleSheet.create({
   },
   labelRight: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+  },
+  labelname: {
+    color: theme.text.muted,
+    fontSize: 12,
+    fontWeight: '500',
+    width: 50,
+    textAlign: 'left',
   },
   label: {
     color: theme.text.muted,
     fontSize: 12,
     fontWeight: '500',
+    width: 45,
+    textAlign: 'right',
   },
   center: {
     flex: 1,

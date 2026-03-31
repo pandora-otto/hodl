@@ -30,11 +30,9 @@ export default function CoinRow({ coin, onPress }: Props) {
 
       <View style={styles.right}>
         <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
-        <View style={styles.percents}>
-          <PercentCell value={coin.price_change_percentage_1h_in_currency} />
-          <PercentCell value={coin.price_change_percentage_24h_in_currency} />
-          <PercentCell value={coin.price_change_percentage_7d_in_currency} />
-        </View>
+        <PercentCell value={coin.price_change_percentage_1h_in_currency} />
+        <PercentCell value={coin.price_change_percentage_24h_in_currency} />
+        <PercentCell value={coin.price_change_percentage_7d_in_currency} />
       </View>
     </TouchableOpacity>
   );
@@ -72,8 +70,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   right: {
-    alignItems: 'flex-end',
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   price: {
     color: theme.text.primary,
@@ -87,5 +86,7 @@ const styles = StyleSheet.create({
   percent: {
     fontSize: 12,
     fontWeight: '500',
+    width: 45,
+    textAlign: 'right',
   },
 });

@@ -13,7 +13,7 @@ export default function CoinHeader({ coin }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>{coin.name}</Text>
+      <Text style={styles.name}>{coin.name} <span style={styles.symbol}> {coin.symbol}</span></Text>
       <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
 
       <View style={styles.row}>
@@ -46,15 +46,20 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   name: {
+    color: theme.text.primary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  symbol: {
     color: theme.text.secondary,
-    fontSize: 14,
-    marginBottom: 4,
+    fontSize: 16,
   },
   price: {
     color: theme.text.primary,
     fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   row: {
     marginBottom: 4,

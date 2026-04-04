@@ -1,93 +1,84 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
 import { theme } from '../constants/theme';
 
 interface Props {
     coin: CoinMarket;
+    change: number | null;
+    low: number | null;
+    high: number | null;
+    loading: boolean;
+    range: string;
 }
 
-export default function CoinHeader({ coin }: Props) {
-    const change24h = coin.price_change_percentage_24h_in_currency;
-    const changeColor = change24h >= 0 ? theme.accent.up : theme.accent.down;
+function rangeLabel(range: string): string {
+    const map: Record<string, string> = {
+        '4H': '4H',
+        '1': '24H',
+        '7': '7D',
+        '30': '1M',
+        '90': '3M',
+        '365': '1Y',
+        max: 'All',
+    };
+    return map[range] ?? range;
+}
+
+export default function CoinHeader({ coin, change, low, high, loading, range }: Props) {
+    const changeColor =
+        change === null ? theme.text.muted : change >= 0 ? theme.accent.up : theme.accent.down;
 
     return (
         <View style={styles.container}>
             <Text style={styles.name}>{coin.name}</Text>
 
-            {/* <View
-                style={[styles.row, styles.flex, styles.flexAlignCenter, styles.flexJustifyBetween]}
-            > */}
             <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
-            {/* <Text style={[styles.change, { color: changeColor }]}> */}
-            {/* {formatPercent(change24h)} (24H) */}
-            {/* </Text> */}
-            {/* </View> */}
 
-            <View
-                style={[styles.row, styles.flex, styles.flexAlignCenter, styles.flexJustifyBetween]}
-            >
-                <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
-                    <Text style={styles.lowHigh}>24H</Text>
-                    <Text style={[styles.change, { color: changeColor }]}>
-                        {' '}
-                        {formatPercent(change24h)}
-                    </Text>
-                </View>
-
-                <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
-                    <Text style={styles.lowHigh}>
-                        Low
-                        <Text style={{ color: theme.accent.down }}>
+            {loading ? (
+                <ActivityIndicator
+                    color={theme.accent.blue}
+                    size="small"
+                    style={{ marginTop: 8 }}
+                />
+            ) : (
+                <View
+                    style={[
+                        styles.row,
+                        styles.flex,
+                        styles.flexAlignCenter,
+                        styles.flexJustifyBetween,
+                    ]}
+                >
+                    <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
+                        <Text style={styles.lowHigh}>{loading ? ' ' : rangeLabel(range)}</Text>
+                        <Text style={[styles.change, { color: changeColor }]}>
                             {' '}
-                            {formatPrice(coin.low_24h)}
+                            {change !== null ? formatPercent(change) : '--'}
                         </Text>
-                    </Text>
-                </View>
+                    </View>
 
-                <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
-                    <Text style={styles.lowHigh}>
-                        High
-                        <Text style={{ color: theme.accent.up }}>
-                            {' '}
-                            {formatPrice(coin.high_24h)}
+                    <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
+                        <Text style={styles.lowHigh}>
+                            Low
+                            <Text style={{ color: theme.accent.down }}>
+                                {' '}
+                                {low !== null ? formatPrice(low) : '--'}
+                            </Text>
                         </Text>
-                    </Text>
-                </View>
-            </View>
+                    </View>
 
-            {/* <View
-                style={[styles.row, styles.flex, styles.flexAlignCenter, styles.flexJustifyBetween]}
-            >
-                <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
-                    <Text style={styles.lowHigh}>24H</Text>
-                    <Text style={[styles.change, { color: changeColor }]}>
-                        {' '}
-                        {formatPercent(change24h)}
-                    </Text>
-                </View>
-                <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
-                    <Text style={styles.lowHigh}>
-                        Low{' '}
-                        <Text style={{ color: theme.accent.down }}>
-                            {formatPrice(coin.low_24h)}
+                    <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
+                        <Text style={styles.lowHigh}>
+                            High
+                            <Text style={{ color: theme.accent.up }}>
+                                {' '}
+                                {high !== null ? formatPrice(high) : '--'}
+                            </Text>
                         </Text>
-                        {'  '}
-                        High{' '}
-                        <Text style={{ color: theme.accent.up }}>{formatPrice(coin.high_24h)}</Text>
-                    </Text>
+                    </View>
                 </View>
-            </View> */}
-
-            {/* <View style={styles.row}>
-                <Text style={styles.lowHigh}>
-                    Low{' '}
-                    <Text style={{ color: theme.accent.down }}>{formatPrice(coin.low_24h)}</Text>
-                    {'  ·  '}
-                    High{' '}
-                    <Text style={{ color: theme.accent.up }}>{formatPrice(coin.high_24h)}</Text>
-                </Text>
-            </View> */}
+            )}
         </View>
     );
 }

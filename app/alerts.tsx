@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { Svg, Path } from 'react-native-svg';
 import { useAlertStore, PriceAlert } from '../store/useAlertStore';
 import { formatPrice } from '../utils/formatters';
 import { theme } from '../constants/theme';
@@ -60,8 +61,10 @@ export default function AlertsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-                  <Text style={styles.back}>← Back</Text>
-                </TouchableOpacity>
+          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <Path d="M15 18L9 12L15 6" stroke={styles.back.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+        </TouchableOpacity>
         <Text style={styles.title}>Price Alerts</Text>
       </View>
 
@@ -108,8 +111,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 8,
+    paddingTop: 50,
+    // paddingBottom: 8,
     gap: 16,
   },
   back: {

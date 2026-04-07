@@ -1,23 +1,35 @@
-import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+    View,
+    Text,
+    FlatList,
+    TouchableOpacity,
+    StyleSheet,
+    Alert,
+    ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { usePriceStore } from '../../store/usePriceStore';
+import { useSettingsStore, CURRENCIES } from '../../store/useSettingsStore';
 import { theme } from '../../constants/theme';
 import CoinRow from '../../components/CoinRow';
 import LoadingBar from '../../components/LoadingBar';
 import { CoinMarket } from '../../services/coingecko';
-import { useSettingsStore } from '../../store/useSettingsStore';
-import Svg, { Line, Circle } from 'react-native-svg';
+import { fetchTopCoins } from '../../services/coingecko';
+import Svg, { Line, Circle, Path } from 'react-native-svg';
+import { config } from '../../constants/config';
 
 type SortField = 'rank' | 'name' | 'price' | '1h' | '24h' | '7d';
 type SortDir = 'asc' | 'desc';
+type ViewMode = 'coins' | 'favorites';
+
+const PER_PAGE = config.COINS_PER_PAGE;
 
 function sortCoins(coins: CoinMarket[], field: SortField, dir: SortDir): CoinMarket[] {
     return [...coins].sort((a, b) => {
         let valA: number | string;
         let valB: number | string;
-
         switch (field) {
             case 'rank':
                 valA = a.market_cap_rank;
@@ -44,7 +56,6 @@ function sortCoins(coins: CoinMarket[], field: SortField, dir: SortDir): CoinMar
                 valB = b.price_change_percentage_7d_in_currency;
                 break;
         }
-
         if (valA < valB) return dir === 'asc' ? -1 : 1;
         if (valA > valB) return dir === 'asc' ? 1 : -1;
         return 0;
@@ -99,14 +110,40 @@ function SearchIcon({ focused }: { focused: boolean }) {
     );
 }
 
+function FavoritesIcon({ focused }: { focused: boolean }) {
+    const color = focused ? theme.text.primary : theme.text.secondary;
+    return (
+        <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
+            <Path d="M11.2691 4.41115C11.5006 3.89177 11.6164 3.63208 11.7776 3.55211C11.9176 3.48263 12.082 3.48263 12.222 3.55211C12.3832 3.63208 12.499 3.89177 12.7305 4.41115L14.5745 8.54808C14.643 8.70162 14.6772 8.77839 14.7302 8.83718C14.777 8.8892 14.8343 8.93081 14.8982 8.95929C14.9705 8.99149 15.0541 9.00031 15.2213 9.01795L19.7256 9.49336C20.2911 9.55304 20.5738 9.58288 20.6997 9.71147C20.809 9.82316 20.8598 9.97956 20.837 10.1342C20.8108 10.3122 20.5996 10.5025 20.1772 10.8832L16.8125 13.9154C16.6877 14.0279 16.6252 14.0842 16.5857 14.1527C16.5507 14.2134 16.5288 14.2807 16.5215 14.3503C16.5132 14.429 16.5306 14.5112 16.5655 14.6757L17.5053 19.1064C17.6233 19.6627 17.6823 19.9408 17.5989 20.1002C17.5264 20.2388 17.3934 20.3354 17.2393 20.3615C17.0619 20.3915 16.8156 20.2495 16.323 19.9654L12.3995 17.7024C12.2539 17.6184 12.1811 17.5765 12.1037 17.56C12.0352 17.5455 11.9644 17.5455 11.8959 17.56C11.8185 17.5765 11.7457 17.6184 11.6001 17.7024L7.67662 19.9654C7.18404 20.2495 6.93775 20.3915 6.76034 20.3615C6.60623 20.3354 6.47319 20.2388 6.40075 20.1002C6.31736 19.9408 6.37635 19.6627 6.49434 19.1064L7.4341 14.6757C7.46898 14.5112 7.48642 14.429 7.47814 14.3503C7.47081 14.2807 7.44894 14.2134 7.41394 14.1527C7.37439 14.0842 7.31195 14.0279 7.18708 13.9154L3.82246 10.8832C3.40005 10.5025 3.18884 10.3122 3.16258 10.1342C3.13978 9.97956 3.19059 9.82316 3.29993 9.71147C3.42581 9.58288 3.70856 9.55304 4.27406 9.49336L8.77835 9.01795C8.94553 9.00031 9.02911 8.99149 9.10139 8.95929C9.16534 8.93081 9.2226 8.8892 9.26946 8.83718C9.32241 8.77839 9.35663 8.70162 9.42508 8.54808L11.2691 4.41115Z"></Path>
+        </Svg>
+    );
+}
+
 export default function WatchlistScreen() {
     const router = useRouter();
-    const { coins, hydrated } = useWatchlistStore();
+    const { coins, hydrated, addCoin, hasCoin } = useWatchlistStore();
     const prices = usePriceStore((state) => state.prices);
     const loading = usePriceStore((state) => state.loading);
+    const { display, defaultView, currency } = useSettingsStore();
+    const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
 
+    const [view, setView] = useState<ViewMode>(defaultView);
+    useEffect(() => {
+        setView(defaultView);
+    }, [defaultView]);
     const [sortField, setSortField] = useState<SortField>('rank');
     const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+    // Coins list state
+    const [topCoins, setTopCoins] = useState<CoinMarket[]>([]);
+    const [page, setPage] = useState(1);
+    const [loadingCoins, setLoadingCoins] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const COINS_REFRESH_MS = config.COINS_REFRESH_MS;
+    const lastCoinsRefresh = useRef<number>(0);
+    const coinsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const handleSort = (field: SortField) => {
         if (field === sortField) {
@@ -117,53 +154,143 @@ export default function WatchlistScreen() {
         }
     };
 
-    const coinsWithPrices = coins.map((c) => prices[c.id]).filter(Boolean) as CoinMarket[];
-
-    const sortedCoins = sortCoins(coinsWithPrices, sortField, sortDir);
-
-    const display = useSettingsStore((state) => state.display);
+    // Load top coins
+    const loadCoins = useCallback(
+        async (pageNum: number, replace: boolean = false) => {
+            if (pageNum === 1) setLoadingCoins(true);
+            else setLoadingMore(true);
+            try {
+                const data = await fetchTopCoins(pageNum, PER_PAGE, currency);
+                if (replace) {
+                    setTopCoins(data);
+                } else {
+                    setTopCoins((prev) => [...prev, ...data]);
+                }
+                setHasMore(data.length === PER_PAGE);
+                setPage(pageNum);
+            } catch (e) {
+                console.warn('Top coins fetch failed:', e);
+            } finally {
+                setLoadingCoins(false);
+                setLoadingMore(false);
+            }
+        },
+        [currency],
+    );
 
     useEffect(() => {
-        if (
-            (sortField === '1h' && !display.show1h) ||
-            (sortField === '24h' && !display.show24h) ||
-            (sortField === '7d' && !display.show7d)
-        ) {
-            setSortField('rank');
-            setSortDir('asc');
+        if (view === 'coins') {
+            // Refresh immediately if stale
+            const isStale = Date.now() - lastCoinsRefresh.current > COINS_REFRESH_MS;
+            if (isStale || topCoins.length === 0) {
+                loadCoins(1, true);
+                lastCoinsRefresh.current = Date.now();
+            }
+
+            // Set up interval while on coins view
+            coinsIntervalRef.current = setInterval(() => {
+                loadCoins(1, true);
+                lastCoinsRefresh.current = Date.now();
+            }, COINS_REFRESH_MS);
+
+            return () => {
+                if (coinsIntervalRef.current) clearInterval(coinsIntervalRef.current);
+            };
         }
-    }, [display]);
+    }, [view, currency]);
+
+    const handleLoadMore = () => {
+        if (!loadingMore && hasMore && view === 'coins') {
+            loadCoins(page + 1);
+        }
+    };
+
+    // Long press handler
+    const handleLongPress = (coin: CoinMarket) => {
+        if (hasCoin(coin.id)) {
+            Alert.alert('Already in Favorites', `${coin.name} is already in your favorites.`);
+            return;
+        }
+        if (coins.length >= 10) {
+            Alert.alert(
+                'Favorites Full',
+                'You can only have up to 10 favorites. Remove one first.',
+            );
+            return;
+        }
+        Alert.alert('Add to Favorites', `Add ${coin.name} to your favorites?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Add',
+                onPress: () => {
+                    addCoin({
+                        id: coin.id,
+                        name: coin.name,
+                        symbol: coin.symbol,
+                        thumb: coin.image,
+                    });
+                    Alert.alert('Added ⭐', `${coin.name} added to your favorites.`);
+                },
+            },
+        ]);
+    };
+
+    // Favorites data
+    const favCoins = coins.map((c) => prices[c.id]).filter(Boolean) as CoinMarket[];
+    const sortedFavs = sortCoins(favCoins, sortField, sortDir);
+    const sortedTopCoins = sortCoins(topCoins, sortField, sortDir);
+
+    const activeCoins = view === 'favorites' ? sortedFavs : sortedTopCoins;
+
+    const safeDisplay = display ?? { show1h: true, show24h: true, show7d: true };
 
     return (
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.title}>HODL</Text>
-                <View style={styles.headerButtons}>
-                    {/* <TouchableOpacity
-                        style={styles.alertsButton}
-                        onPress={() => router.push('/alerts')}
-                    >
-                        <Text style={styles.alertsButtonText}>🔔</Text>
-                    </TouchableOpacity> */}
+                {/* View Dropdown */}
+                <View style={styles.viewToggle}>
                     <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => router.push('/search')}
+                        style={[styles.toggleBtn, view === 'coins' && styles.toggleBtnActive]}
+                        onPress={() => setView('coins')}
                     >
-                        <SearchIcon focused={true} />
+                        <Text
+                            style={[styles.toggleText, view === 'coins' && styles.toggleTextActive]}
+                        >
+                            Coins
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.toggleBtn, view === 'favorites' && styles.toggleBtnActive]}
+                        onPress={() => setView('favorites')}
+                    >
+                        <FavoritesIcon focused={view === 'favorites'} />
+                        <Text
+                            style={[
+                                styles.toggleText,
+                                view === 'favorites' && styles.toggleTextActive,
+                            ]}
+                        >
+                            Favorites
+                        </Text>
                     </TouchableOpacity>
                 </View>
+                <TouchableOpacity style={styles.addButton} onPress={() => router.push('/search')}>
+                    <SearchIcon focused={true} />
+                </TouchableOpacity>
             </View>
 
-            {/* Loading Bar */}
-            <LoadingBar loading={loading} />
+            {/* Loading Bar — only for favorites */}
+            {/* {view === 'favorites' && <LoadingBar loading={loading} />} */}
+
+            <LoadingBar loading={view === 'favorites' ? loading : loadingCoins || loadingMore} />
 
             {/* Column Headers */}
-            {sortedCoins.length > 0 && (
+            {activeCoins.length > 0 && (
                 <View style={styles.columnRow}>
                     <View style={styles.leftLabels}>
                         <ColumnHeader
-                            style={styles.rank}
+                            style={styles.rankLabel}
                             label="#"
                             field="rank"
                             currentField={sortField}
@@ -190,7 +317,7 @@ export default function WatchlistScreen() {
                             currentDir={sortDir}
                             onPress={handleSort}
                         />
-                        {display.show1h && (
+                        {safeDisplay.show1h && (
                             <ColumnHeader
                                 style={styles.label}
                                 label="1H"
@@ -200,7 +327,7 @@ export default function WatchlistScreen() {
                                 onPress={handleSort}
                             />
                         )}
-                        {display.show24h && (
+                        {safeDisplay.show24h && (
                             <ColumnHeader
                                 style={styles.label}
                                 label="24H"
@@ -210,7 +337,7 @@ export default function WatchlistScreen() {
                                 onPress={handleSort}
                             />
                         )}
-                        {display.show7d && (
+                        {safeDisplay.show7d && (
                             <ColumnHeader
                                 style={styles.label}
                                 label="7D"
@@ -224,27 +351,61 @@ export default function WatchlistScreen() {
                 </View>
             )}
 
-            {/* Coin List */}
-            {!hydrated ? (
-                <View style={styles.center}>
-                    <Text style={styles.muted}>Loading...</Text>
-                </View>
-            ) : sortedCoins.length === 0 ? (
-                <View style={styles.center}>
-                    <Text style={styles.emptyTitle}>No coins yet</Text>
-                    <Text style={styles.emptySubtitle}>
-                        Tap "+ Add" to search and add up to 10 coins
-                    </Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={sortedCoins}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <CoinRow coin={item} onPress={() => router.push(`/coin/${item.id}`)} />
-                    )}
-                />
-            )}
+            {/* Coins View */}
+            {view === 'coins' &&
+                (loadingCoins ? (
+                    <View style={styles.center}>
+                        <ActivityIndicator color={theme.accent.blue} />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={activeCoins}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <CoinRow
+                                coin={item}
+                                onPress={() => router.push(`/coin/${item.id}`)}
+                                onLongPress={() => handleLongPress(item)}
+                            />
+                        )}
+                        onEndReached={handleLoadMore}
+                        onEndReachedThreshold={0.3}
+                        ListFooterComponent={
+                            loadingMore ? (
+                                <View style={styles.footer}>
+                                    <ActivityIndicator color={theme.accent.blue} />
+                                </View>
+                            ) : null
+                        }
+                    />
+                ))}
+
+            {/* Favorites View */}
+            {view === 'favorites' &&
+                (!hydrated ? (
+                    <View style={styles.center}>
+                        <Text style={styles.muted}>Loading...</Text>
+                    </View>
+                ) : sortedFavs.length === 0 ? (
+                    <View style={styles.center}>
+                        <Text style={styles.emptyTitle}>No favorites yet</Text>
+                        <Text style={styles.emptySubtitle}>
+                            Switch to Coins and long press any coin to add it to your favorites
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={sortedFavs}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <CoinRow
+                                coin={item}
+                                onPress={() => router.push(`/coin/${item.id}`)}
+                                onLongPress={() => handleLongPress(item)}
+                            />
+                        )}
+                    />
+                ))}
         </View>
     );
 }
@@ -262,40 +423,35 @@ const styles = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 16,
     },
-    headerButtons: {
+    viewToggle: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    alertsButton: {
         backgroundColor: theme.bg.secondary,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
         borderRadius: 20,
+        padding: 3,
         borderWidth: 1,
         borderColor: theme.border,
     },
-    alertsButtonText: {
-        fontSize: 16,
+    toggleBtn: {
+        paddingHorizontal: 16,
+        paddingVertical: 2,
+        borderRadius: 18,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
-    title: {
-        color: theme.text.primary,
-        fontSize: 28,
-        fontWeight: 'bold',
-        letterSpacing: 2,
+    toggleBtnActive: {
+        backgroundColor: theme.accent.blue,
     },
-    addButton: {
-        // backgroundColor: theme.accent.blue,
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        // borderRadius: 20,
+    toggleText: {
+        color: theme.text.muted,
+        fontSize: 13,
+        fontWeight: '600',
     },
-    // addButtonText: {
-    //     color: '#fff',
-    //     // fontWeight: '600',
-    //     // fontSize: 14,
-    // },
 
+    toggleTextActive: {
+        color: '#fff',
+    },
     columnRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -309,7 +465,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 6,
     },
-    rank: {
+    addButton: {
+        // backgroundColor: theme.accent.blue,
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        // borderRadius: 20,
+    },
+    rankLabel: {
         color: theme.text.muted,
         fontSize: 12,
         fontWeight: '500',
@@ -320,10 +482,8 @@ const styles = StyleSheet.create({
         color: theme.text.muted,
         fontSize: 12,
         fontWeight: '500',
-        width: 'auto',
         textAlign: 'left',
     },
-
     rightLabels: {
         flexDirection: 'row',
         gap: 8,
@@ -335,21 +495,6 @@ const styles = StyleSheet.create({
         width: 45,
         textAlign: 'right',
     },
-
-    columnLabels: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    labelRight: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-
     labelActive: {
         color: theme.accent.blue,
     },
@@ -373,5 +518,9 @@ const styles = StyleSheet.create({
     muted: {
         color: theme.text.muted,
         fontSize: 14,
+    },
+    footer: {
+        paddingVertical: 20,
+        alignItems: 'center',
     },
 });

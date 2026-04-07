@@ -23,12 +23,16 @@ import TimeRangeSelector, { TimeRange } from '../../components/TimeRangeSelector
 import CoinInfoTable from '../../components/CoinInfoTable';
 import { formatPrice } from '../../utils/formatters';
 import { useEffect } from 'react';
+import { useSettingsStore, CURRENCIES } from '../../store/useSettingsStore';
+import { fetchMarkets } from '../../services/coingecko';
 
 export default function CoinDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
 
-    const coin = usePriceStore((state) => state.prices[id]);
+    const storedCoin = usePriceStore((state) => state.prices[id]);
+    const [localCoin, setLocalCoin] = useState(storedCoin);
+    const coin = storedCoin ?? localCoin;
     const { removeCoin, hasCoin } = useWatchlistStore();
     const { addAlert } = useAlertStore();
 
@@ -44,9 +48,22 @@ export default function CoinDetailScreen() {
     const [chartLow, setChartLow] = useState<number | null>(null);
     const [chartHigh, setChartHigh] = useState<number | null>(null);
 
+    const currency = useSettingsStore((state) => state.currency);
+    const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
+
     useEffect(() => {
         loadChart();
     }, [id, range]);
+
+    useEffect(() => {
+        if (!storedCoin) {
+            fetchMarkets([id], currency)
+                .then((data) => {
+                    if (data.length > 0) setLocalCoin(data[0]);
+                })
+                .catch((e) => console.warn('Coin fetch failed:', e));
+        }
+    }, [id, currency]);
 
     const loadChart = async () => {
         setChartLoading(true);
@@ -55,7 +72,7 @@ export default function CoinDetailScreen() {
         setChartHigh(null);
         try {
             const apiRange = range === '4H' ? '1' : range;
-            const raw = await fetchChartData(id, apiRange);
+            const raw = await fetchChartData(id, apiRange, currency);
             let prices = raw.prices;
 
             // If 4H selected, slice to last 4 hours of data
@@ -125,7 +142,7 @@ export default function CoinDetailScreen() {
         setAlertPrice('');
         Alert.alert(
             'Alert Set ✓',
-            `You'll be notified when ${coin.name} goes ${direction} ${formatPrice(target)}`,
+            `You'll be notified when ${coin.name} goes ${direction} ${formatPrice(target, symbol)}`,
         );
     };
 
@@ -198,7 +215,7 @@ export default function CoinDetailScreen() {
                     <View style={styles.modalCard}>
                         <Text style={styles.modalTitle}>Set Price Alert</Text>
                         <Text style={styles.modalSubtitle}>
-                            Current price: {formatPrice(coin.current_price)}
+                            Current price: {formatPrice(coin.current_price, symbol)}
                         </Text>
 
                         {/* Price input */}

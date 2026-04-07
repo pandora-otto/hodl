@@ -2,6 +2,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
 import { theme } from '../constants/theme';
+import { useSettingsStore, CURRENCIES } from '../store/useSettingsStore';
 
 interface Props {
     coin: CoinMarket;
@@ -29,11 +30,14 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
     const changeColor =
         change === null ? theme.text.muted : change >= 0 ? theme.accent.up : theme.accent.down;
 
+    const currency = useSettingsStore((state) => state.currency);
+    const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
+
     return (
         <View style={styles.container}>
             <Text style={styles.name}>{coin.name}</Text>
 
-            <Text style={styles.price}>{formatPrice(coin.current_price)}</Text>
+            <Text style={styles.price}>{formatPrice(coin.current_price, symbol)}</Text>
 
             {loading ? (
                 <ActivityIndicator
@@ -63,7 +67,7 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
                             Low
                             <Text style={{ color: theme.accent.down }}>
                                 {' '}
-                                {low !== null ? formatPrice(low) : '--'}
+                                {low !== null ? formatPrice(low, symbol) : '--'}
                             </Text>
                         </Text>
                     </View>
@@ -73,7 +77,7 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
                             High
                             <Text style={{ color: theme.accent.up }}>
                                 {' '}
-                                {high !== null ? formatPrice(high) : '--'}
+                                {high !== null ? formatPrice(high, symbol) : '--'}
                             </Text>
                         </Text>
                     </View>

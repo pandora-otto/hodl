@@ -31,7 +31,8 @@ export default function CoinDetailScreen() {
     const router = useRouter();
 
     const storedCoin = usePriceStore((state) => state.prices[id]);
-    const [localCoin, setLocalCoin] = useState(storedCoin);
+    const tempCoin = usePriceStore((state) => state.tempCoin);
+    const [localCoin, setLocalCoin] = useState(storedCoin ?? tempCoin ?? null);
     const coin = storedCoin ?? localCoin;
     const { removeCoin, hasCoin } = useWatchlistStore();
     const { addAlert } = useAlertStore();
@@ -56,7 +57,8 @@ export default function CoinDetailScreen() {
     }, [id, range]);
 
     useEffect(() => {
-        if (!storedCoin) {
+        // Only fetch if we have nothing at all
+        if (!storedCoin && !tempCoin) {
             fetchMarkets([id], currency)
                 .then((data) => {
                     if (data.length > 0) setLocalCoin(data[0]);

@@ -65,7 +65,9 @@ export default function CoinRow({ coin, onPress, onLongPress }: Props) {
                     {coin.market_cap_rank}
                 </Text>
                 <View style={styles.nameContainer}>
-                    <Text style={styles.name}>{coin.symbol.toUpperCase()}</Text>
+                    <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+                        {coin.symbol.toUpperCase()}
+                    </Text>
                     <Text style={styles.symbol} numberOfLines={1} ellipsizeMode="tail">
                         {coin.name}
                     </Text>

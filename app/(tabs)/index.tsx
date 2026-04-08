@@ -364,7 +364,10 @@ export default function WatchlistScreen() {
                         renderItem={({ item }) => (
                             <CoinRow
                                 coin={item}
-                                onPress={() => router.push(`/coin/${item.id}`)}
+                                onPress={() => {
+                                    usePriceStore.getState().setTempCoin(item);
+                                    router.push(`/coin/${item.id}`);
+                                }}
                                 onLongPress={() => handleLongPress(item)}
                             />
                         )}

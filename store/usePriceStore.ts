@@ -9,12 +9,16 @@ interface PriceStore {
     hydrate: () => Promise<void>;
     setPrices: (data: CoinMarket[]) => void;
     setLoading: (val: boolean) => void;
+    tempCoin: CoinMarket | null;
+    setTempCoin: (coin: CoinMarket) => void;
 }
 
 export const usePriceStore = create<PriceStore>((set) => ({
     prices: {},
     lastUpdated: null,
     loading: false,
+    tempCoin: null as CoinMarket | null,
+    setTempCoin: (coin: CoinMarket) => set({ tempCoin: coin }),
 
     hydrate: async () => {
         const saved = await loadData<Record<string, CoinMarket>>(STORAGE_KEYS.PRICES);

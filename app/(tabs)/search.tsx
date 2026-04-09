@@ -14,6 +14,7 @@ import { searchCoins, CoinSearchResult } from '../../services/coingecko';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { theme } from '../../constants/theme';
 import { config } from '../../constants/config';
+import { Svg, Path } from 'react-native-svg';
 
 export default function SearchScreen() {
     const router = useRouter();
@@ -84,8 +85,8 @@ export default function SearchScreen() {
                         <View style={[styles.thumb, styles.thumbPlaceholder]} />
                     )}
                     <View>
-                        <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemSymbol}>{item.symbol.toUpperCase()}</Text>
+                        <Text style={styles.itemName}>{item.symbol}</Text>
+                        <Text style={styles.itemSymbol}>{item.name.toUpperCase()}</Text>
                     </View>
                 </View>
                 <View style={[styles.badge, added ? styles.badgeRemove : styles.badgeAdd]}>
@@ -99,9 +100,17 @@ export default function SearchScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Text style={styles.back}>← Back</Text>
-                </TouchableOpacity>
+                {/* <TouchableOpacity onPress={() => router.back()}>
+                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                        <Path
+                            d="M15 18L9 12L15 6"
+                            stroke={styles.back.color}
+                            strokeWidth={3}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </Svg>
+                </TouchableOpacity> */}
                 <Text style={styles.title}>Search Coins</Text>
             </View>
 
@@ -110,7 +119,7 @@ export default function SearchScreen() {
                 <TextInput
                     style={styles.input}
                     placeholder="Search by name or ticker..."
-                    placeholderTextColor={theme.text.muted}
+                    placeholderTextColor={theme.text.secondary}
                     value={query}
                     onChangeText={handleSearch}
                     autoFocus
@@ -130,7 +139,9 @@ export default function SearchScreen() {
             </View>
 
             {/* Watchlist count */}
-            <Text style={styles.countLabel}>{coins.length}/10 coins in watchlist</Text>
+            <Text style={styles.countLabel}>
+                {coins.length}/{MAX_FAVORITES} coins in favorites
+            </Text>
 
             {/* Error */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -151,14 +162,14 @@ export default function SearchScreen() {
             {/* Empty state */}
             {!loading && query.length >= 2 && results.length === 0 && !error && (
                 <View style={styles.center}>
-                    <Text style={styles.muted}>No results for "{query}"</Text>
+                    <Text style={styles.secondary}>No results for "{query}"</Text>
                 </View>
             )}
 
             {/* Initial hint */}
             {query.length < 2 && !loading && (
                 <View style={styles.center}>
-                    <Text style={styles.muted}>Type at least 2 characters to search</Text>
+                    <Text style={styles.secondary}>Type at least 2 characters to search</Text>
                 </View>
             )}
         </View>
@@ -174,7 +185,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        paddingTop: 60,
+        paddingTop: 50,
         paddingBottom: 8,
         gap: 16,
     },
@@ -185,7 +196,7 @@ const styles = StyleSheet.create({
     },
     title: {
         color: theme.text.primary,
-        fontSize: 20,
+        fontSize: 28,
         fontWeight: 'bold',
     },
     searchBar: {
@@ -195,7 +206,7 @@ const styles = StyleSheet.create({
         margin: 16,
         borderRadius: 12,
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
     input: {
         flex: 1,
@@ -208,7 +219,7 @@ const styles = StyleSheet.create({
         paddingLeft: 8,
     },
     countLabel: {
-        color: theme.text.muted,
+        color: theme.text.secondary,
         fontSize: 12,
         paddingHorizontal: 16,
         marginBottom: 8,
@@ -275,8 +286,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    muted: {
-        color: theme.text.muted,
-        fontSize: 14,
+    secondary: {
+        color: theme.text.secondary,
+        fontSize: 15,
     },
 });

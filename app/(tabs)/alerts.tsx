@@ -25,6 +25,16 @@ function AlertRow({ alert, onDelete }: { alert: PriceAlert; onDelete: () => void
     );
 }
 
+function AlertIcon({ focused }: { focused: boolean }) {
+    const color = focused ? theme.text.primary : theme.text.secondary;
+    return (
+        <Svg width={16} height={16} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
+            <Path d="M20.59,14.86V10.09A8.6,8.6,0,0,0,12,1.5h0a8.6,8.6,0,0,0-8.59,8.59v4.77L1.5,16.77v1.91h21V16.77Z"></Path>
+            <Path d="M14.69,18.68a2.55,2.55,0,0,1,.17,1,2.86,2.86,0,0,1-5.72,0,2.55,2.55,0,0,1,.17-1"></Path>
+        </Svg>
+    );
+}
+
 export default function AlertsScreen() {
     const { alerts, removeAlert } = useAlertStore();
 
@@ -51,7 +61,7 @@ export default function AlertsScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                {/* <TouchableOpacity onPress={() => router.back()}>
                     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
                         <Path
                             d="M15 18L9 12L15 6"
@@ -61,7 +71,7 @@ export default function AlertsScreen() {
                             strokeLinejoin="round"
                         />
                     </Svg>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <Text style={styles.title}>Price Alerts</Text>
             </View>
 
@@ -69,7 +79,7 @@ export default function AlertsScreen() {
                 <View style={styles.center}>
                     <Text style={styles.emptyTitle}>No alerts set</Text>
                     <Text style={styles.emptySubtitle}>
-                        Open a coin and tap 🔔 Alert to set a price alert
+                        Open a coin and tap <AlertIcon focused={false} /> to set a price alert
                     </Text>
                 </View>
             ) : (
@@ -109,7 +119,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingTop: 50,
-        // paddingBottom: 8,
+        paddingBottom: 8,
         gap: 16,
     },
     back: {
@@ -119,7 +129,7 @@ const styles = StyleSheet.create({
     },
     title: {
         color: theme.text.primary,
-        fontSize: 20,
+        fontSize: 28,
         fontWeight: 'bold',
     },
     sectionLabel: {
@@ -194,8 +204,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     emptySubtitle: {
-        color: theme.text.muted,
-        fontSize: 14,
+        color: theme.text.secondary,
+        fontSize: 15,
         textAlign: 'center',
     },
 });

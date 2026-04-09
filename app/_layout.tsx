@@ -7,6 +7,8 @@ import { usePriceFetcher } from '../hooks/usePriceFetcher';
 import { useAlertChecker } from '../hooks/useAlertChecker';
 import { requestNotificationPermission } from '../services/notifications';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 
 function AppInitializer() {
     usePriceFetcher();
@@ -29,7 +31,8 @@ export default function RootLayout() {
     }, []);
 
     return (
-        <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <StatusBar style="light" />
             <AppInitializer />
             <Stack
                 screenOptions={{
@@ -39,6 +42,6 @@ export default function RootLayout() {
                     contentStyle: { backgroundColor: '#111827' },
                 }}
             />
-        </>
+        </GestureHandlerRootView>
     );
 }

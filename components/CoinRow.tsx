@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated as RNAnimated } from
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, { useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-import Svg, { Path, Line, Circle } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
 import { theme } from '../constants/theme';
@@ -43,8 +43,8 @@ function StarIcon({ filled }: { filled: boolean }) {
 function BellIcon() {
     return (
         <Svg
-            width={20}
-            height={20}
+            width={30}
+            height={30}
             viewBox="0 0 24 24"
             fill="none"
             stroke="#fff"
@@ -61,8 +61,8 @@ function BellIcon() {
 function SwipeStarIcon({ isFavorite }: { isFavorite: boolean }) {
     return (
         <Svg
-            width={22}
-            height={22}
+            width={30}
+            height={30}
             viewBox="0 0 24 24"
             fill={isFavorite ? '#fff' : 'none'}
             stroke="#fff"
@@ -95,11 +95,9 @@ function RightActions({
         <Animated.View style={[styles.swipeActions, styleAnimation]}>
             <TouchableOpacity style={styles.swipeActionStar} onPress={onStar} activeOpacity={0.7}>
                 <SwipeStarIcon isFavorite={isFavoriteRef.current} />
-                <Text style={styles.swipeLabel}>{isFavoriteRef.current ? 'Unfav' : 'Fav'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.swipeActionBell} onPress={onBell} activeOpacity={0.7}>
                 <BellIcon />
-                <Text style={styles.swipeLabel}>Alert</Text>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -330,10 +328,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: 70,
         gap: 4,
-    },
-    swipeLabel: {
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: '600',
     },
 });

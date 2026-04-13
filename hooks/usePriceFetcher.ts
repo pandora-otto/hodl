@@ -37,4 +37,6 @@ export function usePriceFetcher() {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [coins, currency]);
+
+    return { fetchPrices };
 }

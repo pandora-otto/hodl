@@ -481,8 +481,8 @@ export default function WatchlistScreen() {
                         <View style={styles.center}>
                             <Text style={styles.emptyTitle}>No favorites yet</Text>
                             <Text style={styles.emptySubtitle}>
-                                Switch to Coins and swipe left or long press on any coin to add it
-                                to your favorites
+                                Search for a coin or swipe left on any coin to add it to your
+                                favorites
                             </Text>
                         </View>
                     ) : (

@@ -77,7 +77,11 @@ export default function SearchScreen() {
     const renderItem = ({ item }: { item: CoinSearchResult }) => {
         const added = hasCoin(item.id);
         return (
-            <TouchableOpacity style={styles.item} onPress={() => handleToggle(item)}>
+            <TouchableOpacity
+                style={styles.item}
+                onPress={() => router.push(`/coin/${item.id}`)}
+                activeOpacity={0.7}
+            >
                 <View style={styles.itemLeft}>
                     {item.thumb ? (
                         <Image source={{ uri: item.thumb }} style={styles.thumb} />
@@ -89,9 +93,16 @@ export default function SearchScreen() {
                         <Text style={styles.itemSymbol}>{item.name.toUpperCase()}</Text>
                     </View>
                 </View>
-                <View style={[styles.badge, added ? styles.badgeRemove : styles.badgeAdd]}>
+                <TouchableOpacity
+                    style={[styles.badge, added ? styles.badgeRemove : styles.badgeAdd]}
+                    onPress={(e) => {
+                        e.stopPropagation();
+                        handleToggle(item);
+                    }}
+                    activeOpacity={0.7}
+                >
                     <Text style={styles.badgeText}>{added ? '− Remove' : '+ Add'}</Text>
-                </View>
+                </TouchableOpacity>
             </TouchableOpacity>
         );
     };

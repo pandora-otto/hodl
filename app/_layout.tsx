@@ -4,17 +4,11 @@ import { useWatchlistStore } from '../store/useWatchlistStore';
 import { usePriceStore } from '../store/usePriceStore';
 import { useAlertStore } from '../store/useAlertStore';
 import { usePriceFetcher } from '../hooks/usePriceFetcher';
-import { useAlertChecker } from '../hooks/useAlertChecker';
-import { requestNotificationPermission } from '../services/notifications';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-
-function AppInitializer() {
-    usePriceFetcher();
-    useAlertChecker();
-    return null;
-}
+import { registerPushToken, updateDeviceLastSeen } from '../services/pushToken';
+import Constants from 'expo-constants';
 
 export default function RootLayout() {
     const hydrateWatchlist = useWatchlistStore((state) => state.hydrate);
@@ -22,18 +16,38 @@ export default function RootLayout() {
     const hydrateAlerts = useAlertStore((state) => state.hydrate);
     const hydrateSettings = useSettingsStore((state) => state.hydrate);
 
+    // Configure foreground notifications
+    useEffect(() => {
+        import('expo-notifications').then((Notifications) => {
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowBanner: true,
+                    shouldShowList: true,
+                    shouldPlaySound: true,
+                    shouldSetBadge: false,
+                }),
+            });
+        });
+    }, []);
+
     useEffect(() => {
         hydrateWatchlist();
         hydratePrices();
         hydrateAlerts();
         hydrateSettings();
-        requestNotificationPermission();
+
+        // Skip push token registration in Expo Go
+        const isExpoGo = Constants.executionEnvironment === 'storeClient';
+        if (!isExpoGo) {
+            registerPushToken().catch(console.warn);
+            updateDeviceLastSeen().catch(console.warn);
+        }
     }, []);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <StatusBar style="light" />
-            <AppInitializer />
+
             <Stack
                 screenOptions={{
                     headerShown: false,

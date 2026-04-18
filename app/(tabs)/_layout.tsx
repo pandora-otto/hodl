@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { theme } from '../../constants/theme';
 import { Text } from 'react-native';
 import Svg, { Path, Polyline, Line, Circle } from 'react-native-svg';
@@ -47,6 +48,8 @@ function SettingsIcon({ focused }: { focused: boolean }) {
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
+    const display = useSettingsStore((state) => state.display);
+    const showLabels = display?.showTabLabels ?? true;
 
     return (
         <Tabs
@@ -59,7 +62,7 @@ export default function TabLayout() {
                     backgroundColor: theme.bg.secondary,
                     borderTopColor: theme.border,
                     borderTopWidth: 1,
-                    height: 50 + insets.bottom,
+                    height: showLabels ? 50 + insets.bottom : 40 + insets.bottom,
                     paddingTop: 0,
                     paddingBottom: insets.bottom,
                 },
@@ -69,6 +72,7 @@ export default function TabLayout() {
                     fontSize: 11,
                     fontWeight: '600',
                 },
+                tabBarShowLabel: showLabels,
                 animation: 'fade',
             }}
         >

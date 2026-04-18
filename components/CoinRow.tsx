@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated as RNAnimated } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Animated as RNAnimated,
+    Image,
+} from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, { useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
@@ -20,9 +27,21 @@ interface Props {
     onSwipeClose?: (id: string) => void;
 }
 
-function PercentCell({ value }: { value: number }) {
+function PercentCell({
+    value,
+    fontSize,
+    percentWidth,
+}: {
+    value: number;
+    fontSize: number;
+    percentWidth: number;
+}) {
     const color = value >= 0 ? theme.accent.up : theme.accent.down;
-    return <Text style={[styles.percent, { color }]}>{formatPercent(value)}</Text>;
+    return (
+        <Text style={[styles.percent, { color, fontSize, width: percentWidth }]}>
+            {formatPercent(value)}
+        </Text>
+    );
 }
 
 function StarIcon({ filled }: { filled: boolean }) {
@@ -144,7 +163,12 @@ export default function CoinRow({
         show1h: true,
         show24h: true,
         show7d: true,
+        showImage: false,
     };
+    const activeCount = [display.show1h, display.show24h, display.show7d].filter(Boolean).length;
+    const percentFontSize = activeCount === 1 ? 14 : activeCount === 2 ? 13 : 12;
+    const percentWidth = activeCount === 1 ? 60 : activeCount === 2 ? 52 : 45;
+    const priceFontSize = activeCount === 0 ? 18 : activeCount === 1 ? 16 : 14;
 
     const currency = useSettingsStore((state) => state.currency);
     const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
@@ -214,6 +238,9 @@ export default function CoinRow({
                     <Text style={[styles.rank, { fontSize: rankFontSize }]}>
                         {coin.market_cap_rank}
                     </Text>
+                    {display.showImage && (
+                        <Image source={{ uri: coin.image }} style={styles.image} />
+                    )}
                     <View style={styles.nameContainer}>
                         <View style={styles.symbolRow}>
                             {isFavorite && (
@@ -232,17 +259,31 @@ export default function CoinRow({
                 </View>
 
                 <View style={styles.right}>
-                    <RNAnimated.Text style={[styles.price, { color: priceColor }]}>
+                    <RNAnimated.Text
+                        style={[styles.price, { color: priceColor, fontSize: priceFontSize }]}
+                    >
                         {formatPrice(coin.current_price, symbol)}
                     </RNAnimated.Text>
                     {display.show1h && (
-                        <PercentCell value={coin.price_change_percentage_1h_in_currency} />
+                        <PercentCell
+                            value={coin.price_change_percentage_1h_in_currency}
+                            fontSize={percentFontSize}
+                            percentWidth={percentWidth}
+                        />
                     )}
                     {display.show24h && (
-                        <PercentCell value={coin.price_change_percentage_24h_in_currency} />
+                        <PercentCell
+                            value={coin.price_change_percentage_24h_in_currency}
+                            fontSize={percentFontSize}
+                            percentWidth={percentWidth}
+                        />
                     )}
                     {display.show7d && (
-                        <PercentCell value={coin.price_change_percentage_7d_in_currency} />
+                        <PercentCell
+                            value={coin.price_change_percentage_7d_in_currency}
+                            fontSize={percentFontSize}
+                            percentWidth={percentWidth}
+                        />
                     )}
                 </View>
             </TouchableOpacity>
@@ -267,6 +308,11 @@ const styles = StyleSheet.create({
         gap: 6,
         flex: 1,
         overflow: 'hidden',
+    },
+    image: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
     },
     rank: {
         color: theme.text.muted,

@@ -30,9 +30,18 @@ export default function SettingsScreen() {
         show1h: true,
         show24h: true,
         show7d: true,
+        showImage: false,
+        showTabLabels: true,
     };
     const toggleDisplay = (key: keyof DisplaySettings) => {
-        setDisplay({ ...display, [key]: !display[key] });
+        const updated = { ...display, [key]: !display[key] };
+
+        // If all 3 percentage columns are now on, force showImage off
+        if (updated.show1h && updated.show24h && updated.show7d) {
+            updated.showImage = false;
+        }
+
+        setDisplay(updated);
     };
 
     return (
@@ -104,6 +113,39 @@ export default function SettingsScreen() {
                         thumbColor="#fff"
                     />
                 </View>
+                <Divider />
+                <View style={styles.row}>
+                    <View>
+                        <Text style={styles.rowLabel}>Coin Images</Text>
+                        {display.show1h && display.show24h && display.show7d && (
+                            <Text style={styles.hint}>Turn off a % column to enable</Text>
+                        )}
+                    </View>
+                    <Switch
+                        value={
+                            display.showImage &&
+                            !(display.show1h && display.show24h && display.show7d)
+                        }
+                        onValueChange={() => toggleDisplay('showImage')}
+                        disabled={display.show1h && display.show24h && display.show7d}
+                        trackColor={{ true: theme.accent.blue }}
+                        thumbColor="#fff"
+                    />
+                </View>
+            </View>
+
+            {/* Display */}
+            <SectionTitle title="Tab Bar" />
+            <View style={styles.card}>
+                <View style={styles.row}>
+                    <Text style={styles.rowLabel}>Show Labels</Text>
+                    <Switch
+                        value={display.showTabLabels}
+                        onValueChange={() => toggleDisplay('showTabLabels')}
+                        trackColor={{ true: theme.accent.blue }}
+                        thumbColor="#fff"
+                    />
+                </View>
             </View>
         </ScrollView>
     );
@@ -156,6 +198,11 @@ const styles = StyleSheet.create({
     rowLabel: {
         color: theme.text.primary,
         fontSize: 15,
+    },
+    hint: {
+        color: theme.text.muted,
+        fontSize: 11,
+        marginTop: 2,
     },
     currencySymbol: {
         color: theme.accent.blue,

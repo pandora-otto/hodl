@@ -7,6 +7,8 @@ import {
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
+    StyleProp,
+    TextStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
@@ -71,7 +73,7 @@ interface ColumnHeaderProps {
     currentDir: SortDir;
     onPress: (field: SortField) => void;
     align?: 'left' | 'right';
-    style?: object;
+    style?: StyleProp<TextStyle>;
 }
 
 function ColumnHeader({
@@ -269,6 +271,10 @@ export default function WatchlistScreen() {
     const activeCoins = view === 'favorites' ? sortedFavs : sortedTopCoins;
 
     const safeDisplay = display ?? { show1h: true, show24h: true, show7d: true };
+    const activeCount = [safeDisplay.show1h, safeDisplay.show24h, safeDisplay.show7d].filter(
+        Boolean,
+    ).length;
+    const percentWidth = activeCount === 1 ? 60 : activeCount === 2 ? 52 : 45;
 
     const handleSwipeBell = useCallback(
         (item: CoinMarket) => {
@@ -380,7 +386,7 @@ export default function WatchlistScreen() {
                             />
                             {safeDisplay.show1h && (
                                 <ColumnHeader
-                                    style={styles.label}
+                                    style={[styles.label, { width: percentWidth }]}
                                     label="1H"
                                     field="1h"
                                     currentField={sortField}
@@ -390,7 +396,7 @@ export default function WatchlistScreen() {
                             )}
                             {safeDisplay.show24h && (
                                 <ColumnHeader
-                                    style={styles.label}
+                                    style={[styles.label, { width: percentWidth }]}
                                     label="24H"
                                     field="24h"
                                     currentField={sortField}
@@ -400,7 +406,7 @@ export default function WatchlistScreen() {
                             )}
                             {safeDisplay.show7d && (
                                 <ColumnHeader
-                                    style={styles.label}
+                                    style={[styles.label, { width: percentWidth }]}
                                     label="7D"
                                     field="7d"
                                     currentField={sortField}

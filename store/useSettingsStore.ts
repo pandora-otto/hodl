@@ -23,6 +23,8 @@ export interface DisplaySettings {
     show1h: boolean;
     show24h: boolean;
     show7d: boolean;
+    showImage: boolean;
+    showTabLabels: boolean;
 }
 
 export interface SettingsStore {
@@ -41,6 +43,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         show1h: true,
         show24h: true,
         show7d: true,
+        showImage: false,
+        showTabLabels: true,
     },
     defaultView: 'coins',
 
@@ -53,7 +57,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         if (saved) {
             set({
                 currency: saved.currency ?? 'usd',
-                display: saved.display ?? { show1h: true, show24h: true, show7d: true },
+                display: saved.display ?? {
+                    show1h: true,
+                    show24h: true,
+                    show7d: true,
+                    showImage: false,
+                    showTabLabels: true,
+                },
                 defaultView: saved.defaultView ?? 'coins',
             });
         }

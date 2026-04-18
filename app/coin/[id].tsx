@@ -1,3 +1,4 @@
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
@@ -154,81 +155,83 @@ export default function CoinDetailScreen() {
     }
 
     return (
-        <View style={styles.container}>
-            {/* Top action bar */}
-            <View style={styles.actionBar}>
-                <View style={styles.image_symbol}>
-                    <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 8 }}>
-                        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                            <Path
-                                d="M15 18L9 12L15 6"
-                                stroke={styles.back.color}
-                                strokeWidth={3}
+        <ErrorBoundary>
+            <View style={styles.container}>
+                {/* Top action bar */}
+                <View style={styles.actionBar}>
+                    <View style={styles.image_symbol}>
+                        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 8 }}>
+                            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                                <Path
+                                    d="M15 18L9 12L15 6"
+                                    stroke={styles.back.color}
+                                    strokeWidth={3}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </Svg>
+                        </TouchableOpacity>
+                        <Image source={{ uri: coin.image }} style={styles.image} />
+                        <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
+                    </View>
+
+                    <View style={styles.actions}>
+                        <TouchableOpacity
+                            style={styles.alertBtn}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/alert/new',
+                                    params: {
+                                        coinId: coin.id,
+                                        coinName: coin.name,
+                                        currentPrice: coin.current_price.toString(),
+                                    },
+                                })
+                            }
+                            activeOpacity={0.7}
+                        >
+                            <Svg
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke={theme.text.primary}
+                                strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                            />
-                        </Svg>
-                    </TouchableOpacity>
-                    <Image source={{ uri: coin.image }} style={styles.image} />
-                    <Text style={styles.symbol}>{coin.symbol.toUpperCase()}</Text>
-                </View>
-
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={styles.alertBtn}
-                        onPress={() =>
-                            router.push({
-                                pathname: '/alert/new',
-                                params: {
-                                    coinId: coin.id,
-                                    coinName: coin.name,
-                                    currentPrice: coin.current_price.toString(),
-                                },
-                            })
-                        }
-                        activeOpacity={0.7}
-                    >
-                        <Svg
-                            width={24}
-                            height={24}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke={theme.text.primary}
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            >
+                                <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </Svg>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.starBtn}
+                            onPress={handleToggleFavorite}
+                            activeOpacity={0.7}
                         >
-                            <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                        </Svg>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.starBtn}
-                        onPress={handleToggleFavorite}
-                        activeOpacity={0.7}
-                    >
-                        <FavoritesIcon filled={isFavorite} />
-                    </TouchableOpacity>
+                            <FavoritesIcon filled={isFavorite} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
+
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <CoinHeader
+                        coin={coin}
+                        change={chartChange}
+                        low={chartLow}
+                        high={chartHigh}
+                        loading={chartLoading}
+                        range={range}
+                    />
+                    <PriceChart data={chartData} loading={chartLoading} onRetry={loadChart} />
+                    <TimeRangeSelector selected={range} onSelect={setRange} />
+                    <CoinInfoTable coin={coin} />
+                    <View style={{ height: 40 }} />
+                </ScrollView>
+
+                <Toast message={toastMsg} visible={toastVisible} />
             </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-                <CoinHeader
-                    coin={coin}
-                    change={chartChange}
-                    low={chartLow}
-                    high={chartHigh}
-                    loading={chartLoading}
-                    range={range}
-                />
-                <PriceChart data={chartData} loading={chartLoading} onRetry={loadChart} />
-                <TimeRangeSelector selected={range} onSelect={setRange} />
-                <CoinInfoTable coin={coin} />
-                <View style={{ height: 40 }} />
-            </ScrollView>
-
-            <Toast message={toastMsg} visible={toastVisible} />
-        </View>
+        </ErrorBoundary>
     );
 }
 

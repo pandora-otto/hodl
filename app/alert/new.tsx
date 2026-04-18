@@ -1,3 +1,4 @@
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
     View,
@@ -200,272 +201,293 @@ export default function NewAlertScreen() {
     ]);
 
     return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={styles.backBtn}
-                    activeOpacity={0.7}
+        <ErrorBoundary>
+            <View style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={styles.backBtn}
+                        activeOpacity={0.7}
+                    >
+                        <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                            <Path
+                                d="M15 18L9 12L15 6"
+                                stroke={theme.accent.blue}
+                                strokeWidth={3}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </Svg>
+                    </TouchableOpacity>
+                    <Text style={styles.title}>New Alert</Text>
+                    <TouchableOpacity
+                        onPress={handleSave}
+                        style={styles.saveBtn}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.saveBtnText}>Save</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                    style={styles.scroll}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
-                    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                        <Path
-                            d="M15 18L9 12L15 6"
-                            stroke={theme.accent.blue}
-                            strokeWidth={3}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </Svg>
-                </TouchableOpacity>
-                <Text style={styles.title}>New Alert</Text>
-                <TouchableOpacity onPress={handleSave} style={styles.saveBtn} activeOpacity={0.7}>
-                    <Text style={styles.saveBtnText}>Save</Text>
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView
-                style={styles.scroll}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Coin Selector */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Coin</Text>
-                    <View style={styles.card}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Search coin..."
-                            placeholderTextColor={theme.text.muted}
-                            value={searchQuery}
-                            onChangeText={preFilled ? undefined : handleSearch}
-                            editable={!preFilled}
-                        />
-                        {searching && (
-                            <ActivityIndicator
-                                color={theme.accent.blue}
-                                style={styles.searchSpinner}
-                            />
-                        )}
-                        {searchResults.length > 0 && (
-                            <View style={styles.searchResults}>
-                                {searchResults.map((coin) => (
-                                    <TouchableOpacity
-                                        key={coin.id}
-                                        style={styles.searchResult}
-                                        onPress={() => handleSelectCoin(coin)}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Text style={styles.searchResultName}>{coin.name}</Text>
-                                        <Text style={styles.searchResultSymbol}>
-                                            {coin.symbol.toUpperCase()}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
-                    </View>
-
-                    {/* Current price reference */}
-                    {currentPrice !== null && (
-                        <Text style={styles.currentPrice}>
-                            Current price: {formatPrice(currentPrice, symbol)}
-                        </Text>
-                    )}
-                </View>
-
-                {/* Alert Type */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Type</Text>
-                    <View style={[styles.card, styles.typeToggle]}>
-                        <TouchableOpacity
-                            style={[styles.typeBtn, type === 'price' && styles.typeBtnActive]}
-                            onPress={() => setType('price')}
-                            activeOpacity={0.7}
-                        >
-                            <Text
-                                style={[
-                                    styles.typeBtnText,
-                                    type === 'price' && styles.typeBtnTextActive,
-                                ]}
-                            >
-                                Price
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.typeBtn, type === 'percentage' && styles.typeBtnActive]}
-                            onPress={() => setType('percentage')}
-                            activeOpacity={0.7}
-                        >
-                            <Text
-                                style={[
-                                    styles.typeBtnText,
-                                    type === 'percentage' && styles.typeBtnTextActive,
-                                ]}
-                            >
-                                Percentage
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* Target Input */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>
-                        {type === 'price' ? 'Target Price' : 'Percentage Change'}
-                    </Text>
-                    <View style={styles.card}>
-                        <View style={styles.inputRow}>
-                            <Text style={styles.inputPrefix}>
-                                {type === 'price' ? symbol : '%'}
-                            </Text>
-                            <TextInput
-                                style={styles.inputInline}
-                                placeholder={type === 'price' ? '0.00' : '0.0'}
-                                placeholderTextColor={theme.text.muted}
-                                keyboardType="numeric"
-                                value={type === 'price' ? targetInput : percentageInput}
-                                onChangeText={
-                                    type === 'price' ? setTargetInput : setPercentageInput
-                                }
-                            />
-                        </View>
-                    </View>
-
-                    {/* Auto direction indicator */}
-                    {type === 'price' && direction !== null && (
-                        <Text
-                            style={[
-                                styles.directionHint,
-                                {
-                                    color:
-                                        direction === 'above' ? theme.accent.up : theme.accent.down,
-                                },
-                            ]}
-                        >
-                            {direction === 'above'
-                                ? '↑ Above current price'
-                                : '↓ Below current price'}
-                        </Text>
-                    )}
-
-                    {/* Percentage hint */}
-                    {type === 'percentage' &&
-                        currentPrice !== null &&
-                        parseFloat(percentageInput) > 0 && (
-                            <View style={styles.pctHint}>
-                                {percentageDirection === 'above' ? (
-                                    <Text
-                                        style={[styles.directionHint, { color: theme.accent.up }]}
-                                    >
-                                        ↑ Triggers at{' '}
-                                        {formatPrice(
-                                            currentPrice * (1 + parseFloat(percentageInput) / 100),
-                                            symbol,
-                                        )}
-                                    </Text>
-                                ) : (
-                                    <Text
-                                        style={[styles.directionHint, { color: theme.accent.down }]}
-                                    >
-                                        ↓ Triggers at{' '}
-                                        {formatPrice(
-                                            currentPrice * (1 - parseFloat(percentageInput) / 100),
-                                            symbol,
-                                        )}
-                                    </Text>
-                                )}
-                            </View>
-                        )}
-                </View>
-
-                {type === 'percentage' && (
+                    {/* Coin Selector */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionLabel}>Direction</Text>
+                        <Text style={styles.sectionLabel}>Coin</Text>
+                        <View style={styles.card}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Search coin..."
+                                placeholderTextColor={theme.text.muted}
+                                value={searchQuery}
+                                onChangeText={preFilled ? undefined : handleSearch}
+                                editable={!preFilled}
+                            />
+                            {searching && (
+                                <ActivityIndicator
+                                    color={theme.accent.blue}
+                                    style={styles.searchSpinner}
+                                />
+                            )}
+                            {searchResults.length > 0 && (
+                                <View style={styles.searchResults}>
+                                    {searchResults.map((coin) => (
+                                        <TouchableOpacity
+                                            key={coin.id}
+                                            style={styles.searchResult}
+                                            onPress={() => handleSelectCoin(coin)}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={styles.searchResultName}>{coin.name}</Text>
+                                            <Text style={styles.searchResultSymbol}>
+                                                {coin.symbol.toUpperCase()}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Current price reference */}
+                        {currentPrice !== null && (
+                            <Text style={styles.currentPrice}>
+                                Current price: {formatPrice(currentPrice, symbol)}
+                            </Text>
+                        )}
+                    </View>
+
+                    {/* Alert Type */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Type</Text>
                         <View style={[styles.card, styles.typeToggle]}>
                             <TouchableOpacity
-                                style={[
-                                    styles.typeBtn,
-                                    percentageDirection === 'above' && styles.typeBtnActive,
-                                ]}
-                                onPress={() => setPercentageDirection('above')}
+                                style={[styles.typeBtn, type === 'price' && styles.typeBtnActive]}
+                                onPress={() => setType('price')}
                                 activeOpacity={0.7}
                             >
                                 <Text
                                     style={[
                                         styles.typeBtnText,
-                                        percentageDirection === 'above' && styles.typeBtnTextActive,
+                                        type === 'price' && styles.typeBtnTextActive,
                                     ]}
                                 >
-                                    ↑ Increase
+                                    Price
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[
                                     styles.typeBtn,
-                                    percentageDirection === 'below' && styles.typeBtnActive,
+                                    type === 'percentage' && styles.typeBtnActive,
                                 ]}
-                                onPress={() => setPercentageDirection('below')}
+                                onPress={() => setType('percentage')}
                                 activeOpacity={0.7}
                             >
                                 <Text
                                     style={[
                                         styles.typeBtnText,
-                                        percentageDirection === 'below' && styles.typeBtnTextActive,
+                                        type === 'percentage' && styles.typeBtnTextActive,
                                     ]}
                                 >
-                                    ↓ Decrease
+                                    Percentage
                                 </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
-                )}
 
-                {/* Repeating */}
-                <View style={styles.section}>
-                    <View style={styles.card}>
-                        <View style={styles.switchRow}>
-                            <View>
-                                <Text style={styles.switchLabel}>Repeating</Text>
-                                <Text style={styles.switchSubLabel}>
-                                    Re-fires after price crosses back
+                    {/* Target Input */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>
+                            {type === 'price' ? 'Target Price' : 'Percentage Change'}
+                        </Text>
+                        <View style={styles.card}>
+                            <View style={styles.inputRow}>
+                                <Text style={styles.inputPrefix}>
+                                    {type === 'price' ? symbol : '%'}
                                 </Text>
+                                <TextInput
+                                    style={styles.inputInline}
+                                    placeholder={type === 'price' ? '0.00' : '0.0'}
+                                    placeholderTextColor={theme.text.muted}
+                                    keyboardType="numeric"
+                                    value={type === 'price' ? targetInput : percentageInput}
+                                    onChangeText={
+                                        type === 'price' ? setTargetInput : setPercentageInput
+                                    }
+                                />
                             </View>
-                            <Switch
-                                value={repeating}
-                                onValueChange={setRepeating}
-                                trackColor={{
-                                    false: theme.border,
-                                    true: theme.accent.blue,
-                                }}
-                                thumbColor="#fff"
-                            />
+                        </View>
+
+                        {/* Auto direction indicator */}
+                        {type === 'price' && direction !== null && (
+                            <Text
+                                style={[
+                                    styles.directionHint,
+                                    {
+                                        color:
+                                            direction === 'above'
+                                                ? theme.accent.up
+                                                : theme.accent.down,
+                                    },
+                                ]}
+                            >
+                                {direction === 'above'
+                                    ? '↑ Above current price'
+                                    : '↓ Below current price'}
+                            </Text>
+                        )}
+
+                        {/* Percentage hint */}
+                        {type === 'percentage' &&
+                            currentPrice !== null &&
+                            parseFloat(percentageInput) > 0 && (
+                                <View style={styles.pctHint}>
+                                    {percentageDirection === 'above' ? (
+                                        <Text
+                                            style={[
+                                                styles.directionHint,
+                                                { color: theme.accent.up },
+                                            ]}
+                                        >
+                                            ↑ Triggers at{' '}
+                                            {formatPrice(
+                                                currentPrice *
+                                                    (1 + parseFloat(percentageInput) / 100),
+                                                symbol,
+                                            )}
+                                        </Text>
+                                    ) : (
+                                        <Text
+                                            style={[
+                                                styles.directionHint,
+                                                { color: theme.accent.down },
+                                            ]}
+                                        >
+                                            ↓ Triggers at{' '}
+                                            {formatPrice(
+                                                currentPrice *
+                                                    (1 - parseFloat(percentageInput) / 100),
+                                                symbol,
+                                            )}
+                                        </Text>
+                                    )}
+                                </View>
+                            )}
+                    </View>
+
+                    {type === 'percentage' && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionLabel}>Direction</Text>
+                            <View style={[styles.card, styles.typeToggle]}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.typeBtn,
+                                        percentageDirection === 'above' && styles.typeBtnActive,
+                                    ]}
+                                    onPress={() => setPercentageDirection('above')}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.typeBtnText,
+                                            percentageDirection === 'above' &&
+                                                styles.typeBtnTextActive,
+                                        ]}
+                                    >
+                                        ↑ Increase
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.typeBtn,
+                                        percentageDirection === 'below' && styles.typeBtnActive,
+                                    ]}
+                                    onPress={() => setPercentageDirection('below')}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.typeBtnText,
+                                            percentageDirection === 'below' &&
+                                                styles.typeBtnTextActive,
+                                        ]}
+                                    >
+                                        ↓ Decrease
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Repeating */}
+                    <View style={styles.section}>
+                        <View style={styles.card}>
+                            <View style={styles.switchRow}>
+                                <View>
+                                    <Text style={styles.switchLabel}>Repeating</Text>
+                                    <Text style={styles.switchSubLabel}>
+                                        Re-fires after price crosses back
+                                    </Text>
+                                </View>
+                                <Switch
+                                    value={repeating}
+                                    onValueChange={setRepeating}
+                                    trackColor={{
+                                        false: theme.border,
+                                        true: theme.accent.blue,
+                                    }}
+                                    thumbColor="#fff"
+                                />
+                            </View>
                         </View>
                     </View>
-                </View>
 
-                {/* Notes */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Notes (optional)</Text>
-                    <View style={styles.card}>
-                        <TextInput
-                            style={styles.notesInput}
-                            placeholder="Add a note..."
-                            placeholderTextColor={theme.text.muted}
-                            value={notes}
-                            onChangeText={(t) => setNotes(t.slice(0, 100))}
-                            multiline
-                            maxLength={100}
-                        />
-                        <Text style={styles.charCount}>{notes.length}/100</Text>
+                    {/* Notes */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Notes (optional)</Text>
+                        <View style={styles.card}>
+                            <TextInput
+                                style={styles.notesInput}
+                                placeholder="Add a note..."
+                                placeholderTextColor={theme.text.muted}
+                                value={notes}
+                                onChangeText={(t) => setNotes(t.slice(0, 100))}
+                                multiline
+                                maxLength={100}
+                            />
+                            <Text style={styles.charCount}>{notes.length}/100</Text>
+                        </View>
                     </View>
-                </View>
 
-                <View style={{ height: 40 }} />
-            </ScrollView>
+                    <View style={{ height: 40 }} />
+                </ScrollView>
 
-            <Toast message={toastMsg} visible={toastVisible} />
-        </View>
+                <Toast message={toastMsg} visible={toastVisible} />
+            </View>
+        </ErrorBoundary>
     );
 }
 

@@ -1,3 +1,4 @@
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
     View,
@@ -19,6 +20,7 @@ import { fetchTopCoins } from '../../services/coingecko';
 import Svg, { Line, Circle, Path } from 'react-native-svg';
 import { config } from '../../constants/config';
 import Toast from '../../components/Toast';
+import { usePriceFetcher } from '../../hooks/usePriceFetcher';
 
 type SortField = 'rank' | 'name' | 'price' | '1h' | '24h' | '7d';
 type SortDir = 'asc' | 'desc';
@@ -122,6 +124,7 @@ function FavoritesIcon({ focused, hasFavorites }: { focused: boolean; hasFavorit
 
 export default function WatchlistScreen() {
     const router = useRouter();
+    const { fetchPrices } = usePriceFetcher();
     const { coins, hydrated, addCoin, hasCoin, removeCoin } = useWatchlistStore();
     const prices = usePriceStore((state) => state.prices);
     const loading = usePriceStore((state) => state.loading);
@@ -157,7 +160,6 @@ export default function WatchlistScreen() {
         }, 4000);
     };
 
-    const MAX_FAVORITES = config.MAX_FAVORITES;
     const COINS_REFRESH_MS = config.COINS_REFRESH_MS;
     const lastCoinsRefresh = useRef<number>(0);
     const coinsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -246,8 +248,8 @@ export default function WatchlistScreen() {
             showToast(`${coin.name} removed from favorites`);
             return;
         }
-        if (coins.length >= MAX_FAVORITES) {
-            showToast(`Favorites full — max ${MAX_FAVORITES} reached`);
+        if (coins.length >= config.MAX_FAVORITES) {
+            showToast(`Favorites full — max ${config.MAX_FAVORITES} reached`);
             return;
         }
         addCoin({
@@ -268,210 +270,252 @@ export default function WatchlistScreen() {
 
     const safeDisplay = display ?? { show1h: true, show24h: true, show7d: true };
 
+    const handleSwipeBell = useCallback(
+        (item: CoinMarket) => {
+            openCloseRef.current?.();
+            openCloseRef.current = null;
+            openIdRef.current = null;
+            router.push({
+                pathname: '/alert/new',
+                params: {
+                    coinId: item.id,
+                    coinName: item.name,
+                    currentPrice: item.current_price.toString(),
+                },
+            });
+        },
+        [router],
+    );
+
     return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                {/* View Dropdown */}
-                <View style={styles.viewToggle}>
-                    <TouchableOpacity
-                        style={[styles.toggleBtn, view === 'coins' && styles.toggleBtnActive]}
-                        onPress={() => setView('coins')}
-                        activeOpacity={0.7}
-                    >
-                        <Text
-                            style={[styles.toggleText, view === 'coins' && styles.toggleTextActive]}
+        <ErrorBoundary>
+            <View style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    {/* View Dropdown */}
+                    <View style={styles.viewToggle}>
+                        <TouchableOpacity
+                            style={[styles.toggleBtn, view === 'coins' && styles.toggleBtnActive]}
+                            onPress={() => setView('coins')}
+                            activeOpacity={0.7}
                         >
-                            Coins
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.toggleBtn, view === 'favorites' && styles.toggleBtnActive]}
-                        onPress={() => setView('favorites')}
-                        activeOpacity={0.7}
-                    >
-                        <FavoritesIcon
-                            focused={view === 'favorites'}
-                            hasFavorites={coins.length > 0}
-                        />
-                        <Text
+                            <Text
+                                style={[
+                                    styles.toggleText,
+                                    view === 'coins' && styles.toggleTextActive,
+                                ]}
+                            >
+                                Coins
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             style={[
-                                styles.toggleText,
-                                view === 'favorites' && styles.toggleTextActive,
+                                styles.toggleBtn,
+                                view === 'favorites' && styles.toggleBtnActive,
                             ]}
+                            onPress={() => setView('favorites')}
+                            activeOpacity={0.7}
                         >
-                            Favorites
-                        </Text>
+                            <FavoritesIcon
+                                focused={view === 'favorites'}
+                                hasFavorites={coins.length > 0}
+                            />
+                            <Text
+                                style={[
+                                    styles.toggleText,
+                                    view === 'favorites' && styles.toggleTextActive,
+                                ]}
+                            >
+                                Favorites
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => router.push('/search')}
+                        activeOpacity={0.7}
+                    >
+                        <SearchIcon focused={true} />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => router.push('/search')}
-                    activeOpacity={0.7}
-                >
-                    <SearchIcon focused={true} />
-                </TouchableOpacity>
+
+                {/* Loading Bar — only for favorites */}
+                {/* {view === 'favorites' && <LoadingBar loading={loading} />} */}
+
+                <LoadingBar
+                    loading={view === 'favorites' ? loading : loadingCoins || loadingMore}
+                />
+
+                {/* Column Headers */}
+                {activeCoins.length > 0 && (
+                    <View style={styles.columnRow}>
+                        <View style={styles.leftLabels}>
+                            <ColumnHeader
+                                style={styles.rankLabel}
+                                label="#"
+                                field="rank"
+                                currentField={sortField}
+                                currentDir={sortDir}
+                                onPress={handleSort}
+                                align="left"
+                            />
+                            <ColumnHeader
+                                style={styles.labelname}
+                                label="Coin"
+                                field="name"
+                                currentField={sortField}
+                                currentDir={sortDir}
+                                onPress={handleSort}
+                                align="left"
+                            />
+                        </View>
+                        <View style={styles.rightLabels}>
+                            <ColumnHeader
+                                style={styles.label}
+                                label="Price"
+                                field="price"
+                                currentField={sortField}
+                                currentDir={sortDir}
+                                onPress={handleSort}
+                            />
+                            {safeDisplay.show1h && (
+                                <ColumnHeader
+                                    style={styles.label}
+                                    label="1H"
+                                    field="1h"
+                                    currentField={sortField}
+                                    currentDir={sortDir}
+                                    onPress={handleSort}
+                                />
+                            )}
+                            {safeDisplay.show24h && (
+                                <ColumnHeader
+                                    style={styles.label}
+                                    label="24H"
+                                    field="24h"
+                                    currentField={sortField}
+                                    currentDir={sortDir}
+                                    onPress={handleSort}
+                                />
+                            )}
+                            {safeDisplay.show7d && (
+                                <ColumnHeader
+                                    style={styles.label}
+                                    label="7D"
+                                    field="7d"
+                                    currentField={sortField}
+                                    currentDir={sortDir}
+                                    onPress={handleSort}
+                                />
+                            )}
+                        </View>
+                    </View>
+                )}
+
+                {/* Coins View */}
+                {view === 'coins' &&
+                    (loadingCoins ? (
+                        <View style={styles.center}>
+                            <ActivityIndicator color={theme.accent.blue} />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={activeCoins}
+                            keyExtractor={(item) => item.id}
+                            refreshing={loadingCoins}
+                            onRefresh={() => {
+                                loadCoins(1, true);
+                                lastCoinsRefresh.current = Date.now();
+                            }}
+                            onScrollBeginDrag={() => {
+                                openCloseRef.current?.();
+                                openCloseRef.current = null;
+                                openIdRef.current = null;
+                            }}
+                            renderItem={({ item }) => (
+                                <CoinRow
+                                    coin={item}
+                                    onPress={() => {
+                                        if (openCloseRef.current) {
+                                            openCloseRef.current();
+                                            openCloseRef.current = null;
+                                            openIdRef.current = null;
+                                            return; // don't navigate
+                                        }
+                                        usePriceStore.getState().setTempCoin(item);
+                                        router.push(`/coin/${item.id}`);
+                                    }}
+                                    onLongPress={() => toggleFavorite(item)}
+                                    isFavorite={hasCoin(item.id)}
+                                    onSwipeStar={() => toggleFavorite(item)}
+                                    onSwipeBell={() => handleSwipeBell(item)}
+                                    onSwipeOpen={handleSwipeOpen}
+                                    onSwipeClose={(id) => handleSwipeClose(id)}
+                                />
+                            )}
+                            onEndReached={handleLoadMore}
+                            onEndReachedThreshold={0.3}
+                            ListFooterComponent={
+                                loadingMore ? (
+                                    <View style={styles.footer}>
+                                        <ActivityIndicator color={theme.accent.blue} />
+                                    </View>
+                                ) : null
+                            }
+                        />
+                    ))}
+
+                {/* Favorites View */}
+                {view === 'favorites' &&
+                    (!hydrated ? (
+                        <View style={styles.center}>
+                            <Text style={styles.muted}>Loading...</Text>
+                        </View>
+                    ) : sortedFavs.length === 0 ? (
+                        <View style={styles.center}>
+                            <Text style={styles.emptyTitle}>No favorites yet</Text>
+                            <Text style={styles.emptySubtitle}>
+                                Switch to Coins and swipe left or long press on any coin to add it
+                                to your favorites
+                            </Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={sortedFavs}
+                            keyExtractor={(item) => item.id}
+                            refreshing={loading}
+                            onRefresh={fetchPrices}
+                            onScrollBeginDrag={() => {
+                                openCloseRef.current?.();
+                                openCloseRef.current = null;
+                                openIdRef.current = null;
+                            }}
+                            renderItem={({ item }) => (
+                                <CoinRow
+                                    coin={item}
+                                    onPress={() => {
+                                        if (openCloseRef.current) {
+                                            openCloseRef.current();
+                                            openCloseRef.current = null;
+                                            openIdRef.current = null;
+                                            return;
+                                        }
+                                        router.push(`/coin/${item.id}`);
+                                    }}
+                                    onLongPress={() => toggleFavorite(item)}
+                                    isFavorite={true}
+                                    onSwipeStar={() => toggleFavorite(item)}
+                                    onSwipeBell={() => handleSwipeBell(item)}
+                                    onSwipeOpen={handleSwipeOpen}
+                                    onSwipeClose={(id) => handleSwipeClose(id)}
+                                />
+                            )}
+                        />
+                    ))}
+
+                <Toast message={toastMsg} visible={toastVisible} />
             </View>
-
-            {/* Loading Bar — only for favorites */}
-            {/* {view === 'favorites' && <LoadingBar loading={loading} />} */}
-
-            <LoadingBar loading={view === 'favorites' ? loading : loadingCoins || loadingMore} />
-
-            {/* Column Headers */}
-            {activeCoins.length > 0 && (
-                <View style={styles.columnRow}>
-                    <View style={styles.leftLabels}>
-                        <ColumnHeader
-                            style={styles.rankLabel}
-                            label="#"
-                            field="rank"
-                            currentField={sortField}
-                            currentDir={sortDir}
-                            onPress={handleSort}
-                            align="left"
-                        />
-                        <ColumnHeader
-                            style={styles.labelname}
-                            label="Coin"
-                            field="name"
-                            currentField={sortField}
-                            currentDir={sortDir}
-                            onPress={handleSort}
-                            align="left"
-                        />
-                    </View>
-                    <View style={styles.rightLabels}>
-                        <ColumnHeader
-                            style={styles.label}
-                            label="Price"
-                            field="price"
-                            currentField={sortField}
-                            currentDir={sortDir}
-                            onPress={handleSort}
-                        />
-                        {safeDisplay.show1h && (
-                            <ColumnHeader
-                                style={styles.label}
-                                label="1H"
-                                field="1h"
-                                currentField={sortField}
-                                currentDir={sortDir}
-                                onPress={handleSort}
-                            />
-                        )}
-                        {safeDisplay.show24h && (
-                            <ColumnHeader
-                                style={styles.label}
-                                label="24H"
-                                field="24h"
-                                currentField={sortField}
-                                currentDir={sortDir}
-                                onPress={handleSort}
-                            />
-                        )}
-                        {safeDisplay.show7d && (
-                            <ColumnHeader
-                                style={styles.label}
-                                label="7D"
-                                field="7d"
-                                currentField={sortField}
-                                currentDir={sortDir}
-                                onPress={handleSort}
-                            />
-                        )}
-                    </View>
-                </View>
-            )}
-
-            {/* Coins View */}
-            {view === 'coins' &&
-                (loadingCoins ? (
-                    <View style={styles.center}>
-                        <ActivityIndicator color={theme.accent.blue} />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={activeCoins}
-                        keyExtractor={(item) => item.id}
-                        onScrollBeginDrag={() => {
-                            openCloseRef.current?.();
-                            openCloseRef.current = null;
-                            openIdRef.current = null;
-                        }}
-                        renderItem={({ item }) => (
-                            <CoinRow
-                                coin={item}
-                                onPress={() => {
-                                    usePriceStore.getState().setTempCoin(item);
-                                    router.push(`/coin/${item.id}`);
-                                }}
-                                onLongPress={() => toggleFavorite(item)}
-                                isFavorite={hasCoin(item.id)}
-                                onSwipeStar={() => toggleFavorite(item)}
-                                onSwipeBell={() => {
-                                    usePriceStore.getState().setTempCoin(item);
-                                    router.push(`/coin/${item.id}`);
-                                }}
-                                onSwipeOpen={handleSwipeOpen}
-                                onSwipeClose={(id) => handleSwipeClose(id)}
-                            />
-                        )}
-                        onEndReached={handleLoadMore}
-                        onEndReachedThreshold={0.3}
-                        ListFooterComponent={
-                            loadingMore ? (
-                                <View style={styles.footer}>
-                                    <ActivityIndicator color={theme.accent.blue} />
-                                </View>
-                            ) : null
-                        }
-                    />
-                ))}
-
-            {/* Favorites View */}
-            {view === 'favorites' &&
-                (!hydrated ? (
-                    <View style={styles.center}>
-                        <Text style={styles.muted}>Loading...</Text>
-                    </View>
-                ) : sortedFavs.length === 0 ? (
-                    <View style={styles.center}>
-                        <Text style={styles.emptyTitle}>No favorites yet</Text>
-                        <Text style={styles.emptySubtitle}>
-                            Switch to Coins and swipe left or long press on any coin to add it to
-                            your favorites
-                        </Text>
-                    </View>
-                ) : (
-                    <FlatList
-                        data={sortedFavs}
-                        keyExtractor={(item) => item.id}
-                        onScrollBeginDrag={() => {
-                            openCloseRef.current?.();
-                            openCloseRef.current = null;
-                            openIdRef.current = null;
-                        }}
-                        renderItem={({ item }) => (
-                            <CoinRow
-                                coin={item}
-                                onPress={() => router.push(`/coin/${item.id}`)}
-                                onLongPress={() => toggleFavorite(item)}
-                                isFavorite={true}
-                                onSwipeStar={() => toggleFavorite(item)}
-                                onSwipeBell={() => {
-                                    usePriceStore.getState().setTempCoin(item);
-                                    router.push(`/coin/${item.id}`);
-                                }}
-                                onSwipeOpen={handleSwipeOpen}
-                                onSwipeClose={(id) => handleSwipeClose(id)}
-                            />
-                        )}
-                    />
-                ))}
-
-            <Toast message={toastMsg} visible={toastVisible} />
-        </View>
+        </ErrorBoundary>
     );
 }
 

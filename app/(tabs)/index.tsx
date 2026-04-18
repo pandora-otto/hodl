@@ -6,9 +6,9 @@ import {
     FlatList,
     TouchableOpacity,
     StyleSheet,
-    ActivityIndicator,
     StyleProp,
     TextStyle,
+    ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
@@ -23,6 +23,7 @@ import Svg, { Line, Circle, Path } from 'react-native-svg';
 import { config } from '../../constants/config';
 import Toast from '../../components/Toast';
 import { usePriceFetcher } from '../../hooks/usePriceFetcher';
+import { SkeletonList } from '../../components/SkeletonRow';
 
 type SortField = 'rank' | 'name' | 'price' | '1h' | '24h' | '7d';
 type SortDir = 'asc' | 'desc';
@@ -420,9 +421,9 @@ export default function WatchlistScreen() {
 
                 {/* Coins View */}
                 {view === 'coins' &&
-                    (loadingCoins ? (
-                        <View style={styles.center}>
-                            <ActivityIndicator color={theme.accent.blue} />
+                    (loadingCoins && topCoins.length === 0 ? (
+                        <View style={{ borderTopWidth: 1, borderTopColor: theme.border }}>
+                            <SkeletonList count={12} />
                         </View>
                     ) : (
                         <FlatList
@@ -446,7 +447,7 @@ export default function WatchlistScreen() {
                                             openCloseRef.current();
                                             openCloseRef.current = null;
                                             openIdRef.current = null;
-                                            return; // don't navigate
+                                            return;
                                         }
                                         usePriceStore.getState().setTempCoin(item);
                                         router.push(`/coin/${item.id}`);
@@ -474,8 +475,8 @@ export default function WatchlistScreen() {
                 {/* Favorites View */}
                 {view === 'favorites' &&
                     (!hydrated ? (
-                        <View style={styles.center}>
-                            <Text style={styles.muted}>Loading...</Text>
+                        <View style={{ borderTopWidth: 1, borderTopColor: theme.border }}>
+                            <SkeletonList count={8} />
                         </View>
                     ) : sortedFavs.length === 0 ? (
                         <View style={styles.center}>

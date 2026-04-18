@@ -15,6 +15,7 @@ import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
 import { theme } from '../constants/theme';
 import { useSettingsStore, CURRENCIES } from '../store/useSettingsStore';
+import * as Haptics from 'expo-haptics';
 
 interface Props {
     coin: CoinMarket;
@@ -112,10 +113,24 @@ function RightActions({
 
     return (
         <Animated.View style={[styles.swipeActions, styleAnimation]}>
-            <TouchableOpacity style={styles.swipeActionStar} onPress={onStar} activeOpacity={0.7}>
+            <TouchableOpacity
+                style={styles.swipeActionStar}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onStar();
+                }}
+                activeOpacity={0.7}
+            >
                 <SwipeStarIcon isFavorite={isFavoriteRef.current} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.swipeActionBell} onPress={onBell} activeOpacity={0.7}>
+            <TouchableOpacity
+                style={styles.swipeActionBell}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onBell();
+                }}
+                activeOpacity={0.7}
+            >
                 <BellIcon />
             </TouchableOpacity>
         </Animated.View>
@@ -230,7 +245,10 @@ export default function CoinRow({
             <TouchableOpacity
                 style={styles.row}
                 onPress={onPress}
-                onLongPress={onLongPress}
+                onLongPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onLongPress?.();
+                }}
                 delayLongPress={400}
                 activeOpacity={0.7}
             >

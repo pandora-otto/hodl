@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { registerPushToken, updateDeviceLastSeen } from '../services/pushToken';
 import Constants from 'expo-constants';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
 
 // This is picked up by Expo Router automatically — catches route-level crashes
 // (e.g. missing env vars, bad imports) instead of killing the whole app
@@ -28,6 +28,9 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 export default function RootLayout() {
     const theme = useTheme();
     const themeMode = useSettingsStore((state) => state.themeMode);
+    const deviceScheme = useColorScheme();
+    const resolvedMode = themeMode === 'system' ? (deviceScheme ?? 'dark') : themeMode;
+
     const hydrateWatchlist = useWatchlistStore((state) => state.hydrate);
     const hydratePrices = usePriceStore((state) => state.hydrate);
     const hydrateAlerts = useAlertStore((state) => state.hydrate);
@@ -65,7 +68,7 @@ export default function RootLayout() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
+            <StatusBar style={resolvedMode === 'light' ? 'dark' : 'light'} />
             <Stack
                 screenOptions={{
                     headerShown: false,

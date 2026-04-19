@@ -2,9 +2,10 @@ import { Tabs } from 'expo-router';
 import { useTheme } from '../../hooks/useTheme';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { theme } from '../../constants/theme';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import Svg, { Path, Polyline, Line, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAlertStore } from '../../store/useAlertStore';
 
 function WatchlistIcon({ focused, theme }: { focused: boolean; theme: any }) {
     const color = focused ? theme.text.primary : theme.text.secondary;
@@ -27,13 +28,45 @@ function SearchIcon({ focused, theme }: { focused: boolean; theme: any }) {
     );
 }
 
-function AlertIcon({ focused, theme }: { focused: boolean; theme: any }) {
+function AlertIcon({
+    focused,
+    theme,
+    hasAlerts,
+}: {
+    focused: boolean;
+    theme: any;
+    hasAlerts: boolean;
+}) {
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
-        <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
-            <Path d="M20.59,14.86V10.09A8.6,8.6,0,0,0,12,1.5h0a8.6,8.6,0,0,0-8.59,8.59v4.77L1.5,16.77v1.91h21V16.77Z"></Path>
-            <Path d="M14.69,18.68a2.55,2.55,0,0,1,.17,1,2.86,2.86,0,0,1-5.72,0,2.55,2.55,0,0,1,.17-1"></Path>
-        </Svg>
+        <View style={{ width: 24, height: 24 }}>
+            <Svg
+                width={24}
+                height={24}
+                viewBox="0 0 24 24"
+                stroke={color}
+                strokeWidth="2"
+                fill="none"
+            >
+                <Path d="M20.59,14.86V10.09A8.6,8.6,0,0,0,12,1.5h0a8.6,8.6,0,0,0-8.59,8.59v4.77L1.5,16.77v1.91h21V16.77Z"></Path>
+                <Path d="M14.69,18.68a2.55,2.55,0,0,1,.17,1,2.86,2.86,0,0,1-5.72,0,2.55,2.55,0,0,1,.17-1"></Path>
+            </Svg>
+            {hasAlerts && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: 10,
+                        height: 10,
+                        borderRadius: 4,
+                        backgroundColor: '#EF4444',
+                        borderWidth: 1.5,
+                        borderColor: theme.bg.secondary,
+                    }}
+                />
+            )}
+        </View>
     );
 }
 
@@ -52,6 +85,8 @@ export default function TabLayout() {
     const theme = useTheme();
     const display = useSettingsStore((state) => state.display);
     const showLabels = display?.showTabLabels ?? true;
+    const alerts = useAlertStore((state) => state.alerts);
+    const hasActiveAlerts = alerts.some((a) => !a.triggered);
 
     return (
         <Tabs
@@ -96,7 +131,9 @@ export default function TabLayout() {
                 name="alerts"
                 options={{
                     title: 'Alerts',
-                    tabBarIcon: ({ focused }) => <AlertIcon focused={focused} theme={theme} />,
+                    tabBarIcon: ({ focused }) => (
+                        <AlertIcon focused={focused} theme={theme} hasAlerts={hasActiveAlerts} />
+                    ),
                 }}
             />
             <Tabs.Screen

@@ -74,13 +74,29 @@ export default function SettingsScreen() {
             <View style={styles.card}>
                 <TouchableOpacity
                     style={styles.row}
-                    onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+                    onPress={() => setThemeMode('system')}
                     activeOpacity={0.7}
                 >
-                    <Text style={styles.rowLabel}>
-                        {themeMode === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-                    </Text>
-                    <Text style={styles.check}>{themeMode === 'dark' ? 'On' : 'Off'}</Text>
+                    <Text style={styles.rowLabel}>📱 Follow Device</Text>
+                    {themeMode === 'system' && <Text style={styles.check}>✓</Text>}
+                </TouchableOpacity>
+                <Divider theme={theme} />
+                <TouchableOpacity
+                    style={styles.row}
+                    onPress={() => setThemeMode('light')}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.rowLabel}>☀️ Light</Text>
+                    {themeMode === 'light' && <Text style={styles.check}>✓</Text>}
+                </TouchableOpacity>
+                <Divider theme={theme} />
+                <TouchableOpacity
+                    style={styles.row}
+                    onPress={() => setThemeMode('dark')}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.rowLabel}>🌙 Dark</Text>
+                    {themeMode === 'dark' && <Text style={styles.check}>✓</Text>}
                 </TouchableOpacity>
             </View>
 

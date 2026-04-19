@@ -19,7 +19,7 @@ export const CURRENCIES: CurrencyInfo[] = [
     { code: 'chf', symbol: 'Fr', label: 'CHF - Swiss Franc' },
 ];
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface DisplaySettings {
     show1h: boolean;
@@ -51,7 +51,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         showTabLabels: true,
     },
     defaultView: 'coins',
-    themeMode: 'dark',
+    themeMode: 'system',
 
     hydrate: async () => {
         const saved = await loadData<{

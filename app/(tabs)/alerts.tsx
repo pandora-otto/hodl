@@ -5,7 +5,7 @@ import { Svg, Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useAlertStore, PriceAlert } from '../../store/useAlertStore';
 import { formatPrice } from '../../utils/formatters';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useSettingsStore, CURRENCIES } from '../../store/useSettingsStore';
 import { useMemo } from 'react';
 import Toast from '../../components/Toast';
@@ -24,6 +24,8 @@ function AlertRow({
     symbol: string;
     onDelete: () => void;
 }) {
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
     const isPrice = alert.type === 'price';
 
     const conditionText = isPrice
@@ -73,6 +75,8 @@ function AlertRow({
 
 export default function AlertsScreen() {
     const router = useRouter();
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
     const { alerts, removeAlert, hydrate } = useAlertStore();
     const currency = useSettingsStore((state) => state.currency);
     const symbol = useMemo(
@@ -234,153 +238,90 @@ export default function AlertsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.bg.primary,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
-    },
-    title: {
-        color: theme.text.primary,
-        fontSize: 28,
-        fontWeight: 'bold',
-    },
-    addBtn: {
-        backgroundColor: theme.accent.blue,
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    warningBanner: {
-        backgroundColor: '#3a2a00',
-        borderWidth: 1,
-        borderColor: '#f5a623',
-        margin: 12,
-        borderRadius: 12,
-        padding: 12,
-    },
-    warningText: {
-        color: '#f5a623',
-        fontSize: 13,
-        lineHeight: 18,
-    },
-    tabs: {
-        flexDirection: 'row',
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-        paddingHorizontal: 16,
-        gap: 24,
-    },
-    tab: {
-        paddingVertical: 12,
-        borderBottomWidth: 2,
-        borderBottomColor: 'transparent',
-    },
-    tabActive: {
-        borderBottomColor: theme.accent.blue,
-    },
-    tabText: {
-        color: theme.text.muted,
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    tabTextActive: {
-        color: theme.text.primary,
-    },
-    tabCount: {
-        color: theme.accent.blue,
-        fontSize: 13,
-        fontWeight: '700',
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        backgroundColor: theme.bg.primary,
-    },
-    rowLeft: {
-        flex: 1,
-        gap: 4,
-        marginRight: 12,
-    },
-    rowTop: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        flexWrap: 'wrap',
-    },
-    coinName: {
-        color: theme.text.primary,
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    repeatBadge: {
-        backgroundColor: theme.bg.secondary,
-        borderWidth: 1,
-        borderColor: theme.border,
-        borderRadius: 6,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-    },
-    repeatBadgeText: {
-        color: theme.text.muted,
-        fontSize: 11,
-        fontWeight: '600',
-    },
-    triggeredBadge: {
-        backgroundColor: theme.accent.up + '22',
-        borderRadius: 6,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-    },
-    triggeredBadgeText: {
-        color: theme.accent.up,
-        fontSize: 11,
-        fontWeight: '600',
-    },
-    condition: {
-        color: theme.text.secondary,
-        fontSize: 13,
-    },
-    notes: {
-        color: theme.text.muted,
-        fontSize: 12,
-        fontStyle: 'italic',
-    },
-    deleteBtn: {
-        padding: 8,
-    },
-    separator: {
-        height: 1,
-        backgroundColor: theme.border,
-        marginLeft: 16,
-    },
-    center: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        paddingHorizontal: 40,
-    },
-    emptyTitle: {
-        color: theme.text.primary,
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    emptySubtitle: {
-        color: theme.text.muted,
-        fontSize: 14,
-        textAlign: 'center',
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.bg.primary },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingTop: 50,
+            paddingBottom: 16,
+        },
+        title: { color: theme.text.primary, fontSize: 28, fontWeight: 'bold' },
+        addBtn: {
+            backgroundColor: theme.accent.blue,
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        warningBanner: {
+            backgroundColor: '#3a2a00',
+            borderWidth: 1,
+            borderColor: '#f5a623',
+            margin: 12,
+            borderRadius: 12,
+            padding: 12,
+        },
+        warningText: { color: '#f5a623', fontSize: 13, lineHeight: 18 },
+        tabs: {
+            flexDirection: 'row',
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+            paddingHorizontal: 16,
+            gap: 24,
+        },
+        tab: {
+            paddingVertical: 12,
+            borderBottomWidth: 2,
+            borderBottomColor: 'transparent',
+        },
+        tabActive: { borderBottomColor: theme.accent.blue },
+        tabText: { color: theme.text.muted, fontSize: 14, fontWeight: '600' },
+        tabTextActive: { color: theme.text.primary },
+        tabCount: { color: theme.accent.blue, fontSize: 13, fontWeight: '700' },
+        row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            backgroundColor: theme.bg.primary,
+        },
+        rowLeft: { flex: 1, gap: 4, marginRight: 12 },
+        rowTop: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+        coinName: { color: theme.text.primary, fontSize: 15, fontWeight: '600' },
+        repeatBadge: {
+            backgroundColor: theme.bg.secondary,
+            borderWidth: 1,
+            borderColor: theme.border,
+            borderRadius: 6,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+        },
+        repeatBadgeText: { color: theme.text.muted, fontSize: 11, fontWeight: '600' },
+        triggeredBadge: {
+            backgroundColor: theme.accent.up + '22',
+            borderRadius: 6,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+        },
+        triggeredBadgeText: { color: theme.accent.up, fontSize: 11, fontWeight: '600' },
+        condition: { color: theme.text.secondary, fontSize: 13 },
+        notes: { color: theme.text.muted, fontSize: 12, fontStyle: 'italic' },
+        deleteBtn: { padding: 8 },
+        separator: { height: 1, backgroundColor: theme.border, marginLeft: 16 },
+        center: {
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            paddingHorizontal: 40,
+        },
+        emptyTitle: { color: theme.text.primary, fontSize: 18, fontWeight: '600' },
+        emptySubtitle: { color: theme.text.muted, fontSize: 14, textAlign: 'center' },
+    });
+}

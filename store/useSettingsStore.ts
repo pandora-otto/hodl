@@ -19,6 +19,8 @@ export const CURRENCIES: CurrencyInfo[] = [
     { code: 'chf', symbol: 'Fr', label: 'CHF - Swiss Franc' },
 ];
 
+export type ThemeMode = 'dark' | 'light';
+
 export interface DisplaySettings {
     show1h: boolean;
     show24h: boolean;
@@ -31,10 +33,12 @@ export interface SettingsStore {
     currency: Currency;
     display: DisplaySettings;
     defaultView: DefaultView;
+    themeMode: ThemeMode;
     hydrate: () => Promise<void>;
     setCurrency: (currency: Currency) => void;
     setDisplay: (display: DisplaySettings) => void;
     setDefaultView: (view: DefaultView) => void;
+    setThemeMode: (mode: ThemeMode) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -47,12 +51,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         showTabLabels: true,
     },
     defaultView: 'coins',
+    themeMode: 'dark',
 
     hydrate: async () => {
         const saved = await loadData<{
             currency: Currency;
             display: DisplaySettings;
             defaultView: DefaultView;
+            themeMode: ThemeMode;
         }>(STORAGE_KEYS.SETTINGS);
         if (saved) {
             set({
@@ -65,25 +71,32 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
                     showTabLabels: true,
                 },
                 defaultView: saved.defaultView ?? 'coins',
+                themeMode: saved.themeMode ?? 'dark',
             });
         }
     },
 
     setCurrency: (currency) => {
-        const { display, defaultView } = get();
+        const { display, defaultView, themeMode } = get();
         set({ currency });
-        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView });
+        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView, themeMode });
     },
 
     setDisplay: (display) => {
-        const { currency, defaultView } = get();
+        const { currency, defaultView, themeMode } = get();
         set({ display });
-        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView });
+        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView, themeMode });
     },
 
     setDefaultView: (defaultView) => {
-        const { currency, display } = get();
+        const { currency, display, themeMode } = get();
         set({ defaultView });
-        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView });
+        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView, themeMode });
+    },
+
+    setThemeMode: (themeMode) => {
+        const { currency, display, defaultView } = get();
+        set({ themeMode });
+        saveData(STORAGE_KEYS.SETTINGS, { currency, display, defaultView, themeMode });
     },
 }));

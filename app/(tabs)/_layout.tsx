@@ -1,11 +1,12 @@
 import { Tabs } from 'expo-router';
+import { useTheme } from '../../hooks/useTheme';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { theme } from '../../constants/theme';
 import { Text } from 'react-native';
 import Svg, { Path, Polyline, Line, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function WatchlistIcon({ focused }: { focused: boolean }) {
+function WatchlistIcon({ focused, theme }: { focused: boolean; theme: any }) {
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
         <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
@@ -16,7 +17,7 @@ function WatchlistIcon({ focused }: { focused: boolean }) {
     );
 }
 
-function SearchIcon({ focused }: { focused: boolean }) {
+function SearchIcon({ focused, theme }: { focused: boolean; theme: any }) {
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
         <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
@@ -26,7 +27,7 @@ function SearchIcon({ focused }: { focused: boolean }) {
     );
 }
 
-function AlertIcon({ focused }: { focused: boolean }) {
+function AlertIcon({ focused, theme }: { focused: boolean; theme: any }) {
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
         <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
@@ -36,7 +37,7 @@ function AlertIcon({ focused }: { focused: boolean }) {
     );
 }
 
-function SettingsIcon({ focused }: { focused: boolean }) {
+function SettingsIcon({ focused, theme }: { focused: boolean; theme: any }) {
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
         <Svg width={24} height={24} viewBox="0 0 32 32" stroke={color} strokeWidth="2" fill="none">
@@ -48,6 +49,7 @@ function SettingsIcon({ focused }: { focused: boolean }) {
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
+    const theme = useTheme();
     const display = useSettingsStore((state) => state.display);
     const showLabels = display?.showTabLabels ?? true;
 
@@ -80,28 +82,28 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: 'Coins',
-                    tabBarIcon: ({ focused }) => <WatchlistIcon focused={focused} />,
+                    tabBarIcon: ({ focused }) => <WatchlistIcon focused={focused} theme={theme} />,
                 }}
             />
             <Tabs.Screen
                 name="search"
                 options={{
                     title: 'Search',
-                    tabBarIcon: ({ focused }) => <SearchIcon focused={focused} />,
+                    tabBarIcon: ({ focused }) => <SearchIcon focused={focused} theme={theme} />,
                 }}
             />
             <Tabs.Screen
                 name="alerts"
                 options={{
                     title: 'Alerts',
-                    tabBarIcon: ({ focused }) => <AlertIcon focused={focused} />,
+                    tabBarIcon: ({ focused }) => <AlertIcon focused={focused} theme={theme} />,
                 }}
             />
             <Tabs.Screen
                 name="settings"
                 options={{
                     title: 'Settings',
-                    tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} />,
+                    tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} theme={theme} />,
                 }}
             />
         </Tabs>

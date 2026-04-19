@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Svg, Path } from 'react-native-svg';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useAlertStore, AlertType } from '../../store/useAlertStore';
 import { searchCoins } from '../../services/coingecko';
 import { formatPrice } from '../../utils/formatters';
@@ -30,6 +30,8 @@ interface CoinResult {
 
 export default function NewAlertScreen() {
     const router = useRouter();
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
     const params = useLocalSearchParams<{
         coinId?: string;
         coinName?: string;
@@ -491,178 +493,104 @@ export default function NewAlertScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.bg.primary,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    backBtn: {
-        padding: 4,
-    },
-    title: {
-        color: theme.text.primary,
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    saveBtn: {
-        backgroundColor: theme.accent.blue,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    saveBtnText: {
-        color: '#fff',
-        fontWeight: '700',
-        fontSize: 14,
-    },
-    scroll: {
-        flex: 1,
-    },
-    section: {
-        paddingHorizontal: 16,
-        paddingTop: 24,
-        gap: 8,
-    },
-    sectionLabel: {
-        color: theme.text.secondary,
-        fontSize: 12,
-        fontWeight: '600',
-        letterSpacing: 0.8,
-        textTransform: 'uppercase',
-    },
-    card: {
-        backgroundColor: theme.bg.secondary,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: theme.border,
-        overflow: 'hidden',
-    },
-    input: {
-        color: theme.text.primary,
-        fontSize: 15,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-    },
-    searchSpinner: {
-        padding: 12,
-    },
-    searchResults: {
-        borderTopWidth: 1,
-        borderTopColor: theme.border,
-    },
-    searchResult: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    searchResultName: {
-        color: theme.text.primary,
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    searchResultSymbol: {
-        color: theme.text.secondary,
-        fontSize: 13,
-    },
-    currentPrice: {
-        color: theme.text.secondary,
-        fontSize: 16,
-        paddingHorizontal: 4,
-    },
-    typeToggle: {
-        flexDirection: 'row',
-        padding: 4,
-    },
-    typeBtn: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 12,
-    },
-    typeBtnActive: {
-        backgroundColor: theme.accent.blue,
-    },
-    typeBtnText: {
-        color: theme.text.muted,
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    typeBtnTextActive: {
-        color: '#fff',
-    },
-    inputRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-    },
-    inputPrefix: {
-        color: theme.text.muted,
-        fontSize: 18,
-        fontWeight: '600',
-        marginRight: 8,
-    },
-    inputInline: {
-        flex: 1,
-        color: theme.text.primary,
-        fontSize: 24,
-        fontWeight: '700',
-        paddingVertical: 14,
-    },
-    directionHint: {
-        fontSize: 13,
-        fontWeight: '600',
-        paddingHorizontal: 4,
-    },
-    pctHint: {
-        flexDirection: 'row',
-        gap: 16,
-        paddingHorizontal: 4,
-    },
-    switchRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-    },
-    switchLabel: {
-        color: theme.text.primary,
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    switchSubLabel: {
-        color: theme.text.muted,
-        fontSize: 12,
-        marginTop: 2,
-    },
-    notesInput: {
-        color: theme.text.primary,
-        fontSize: 15,
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 8,
-        minHeight: 80,
-        textAlignVertical: 'top',
-    },
-    charCount: {
-        color: theme.text.muted,
-        fontSize: 11,
-        textAlign: 'right',
-        paddingHorizontal: 16,
-        paddingBottom: 10,
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.bg.primary },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingTop: 50,
+            paddingBottom: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+        },
+        backBtn: { padding: 4 },
+        title: { color: theme.text.primary, fontSize: 18, fontWeight: '700' },
+        saveBtn: {
+            backgroundColor: theme.accent.blue,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderRadius: 20,
+        },
+        saveBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+        scroll: { flex: 1 },
+        section: { paddingHorizontal: 16, paddingTop: 24, gap: 8 },
+        sectionLabel: {
+            color: theme.text.secondary,
+            fontSize: 12,
+            fontWeight: '600',
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+        },
+        card: {
+            backgroundColor: theme.bg.secondary,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: theme.border,
+            overflow: 'hidden',
+        },
+        input: {
+            color: theme.text.primary,
+            fontSize: 15,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+        },
+        searchSpinner: { padding: 12 },
+        searchResults: { borderTopWidth: 1, borderTopColor: theme.border },
+        searchResult: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+        },
+        searchResultName: { color: theme.text.primary, fontSize: 14, fontWeight: '500' },
+        searchResultSymbol: { color: theme.text.secondary, fontSize: 13 },
+        currentPrice: { color: theme.text.secondary, fontSize: 16, paddingHorizontal: 4 },
+        typeToggle: { flexDirection: 'row', padding: 4 },
+        typeBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12 },
+        typeBtnActive: { backgroundColor: theme.accent.blue },
+        typeBtnText: { color: theme.text.muted, fontSize: 14, fontWeight: '600' },
+        typeBtnTextActive: { color: '#fff' },
+        inputRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
+        inputPrefix: { color: theme.text.muted, fontSize: 18, fontWeight: '600', marginRight: 8 },
+        inputInline: {
+            flex: 1,
+            color: theme.text.primary,
+            fontSize: 24,
+            fontWeight: '700',
+            paddingVertical: 14,
+        },
+        directionHint: { fontSize: 13, fontWeight: '600', paddingHorizontal: 4 },
+        pctHint: { flexDirection: 'row', gap: 16, paddingHorizontal: 4 },
+        switchRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+        },
+        switchLabel: { color: theme.text.primary, fontSize: 15, fontWeight: '600' },
+        switchSubLabel: { color: theme.text.muted, fontSize: 12, marginTop: 2 },
+        notesInput: {
+            color: theme.text.primary,
+            fontSize: 15,
+            paddingHorizontal: 16,
+            paddingTop: 14,
+            paddingBottom: 8,
+            minHeight: 80,
+            textAlignVertical: 'top',
+        },
+        charCount: {
+            color: theme.text.muted,
+            fontSize: 11,
+            textAlign: 'right',
+            paddingHorizontal: 16,
+            paddingBottom: 10,
+        },
+    });
+}

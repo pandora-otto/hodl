@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -13,7 +13,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { useSettingsStore, CURRENCIES } from '../store/useSettingsStore';
 import * as Haptics from 'expo-haptics';
 
@@ -37,9 +37,12 @@ function PercentCell({
     fontSize: number;
     percentWidth: number;
 }) {
+    const theme = useTheme();
     const color = value >= 0 ? theme.accent.up : theme.accent.down;
     return (
-        <Text style={[styles.percent, { color, fontSize, width: percentWidth }]}>
+        <Text
+            style={{ color, fontSize, width: percentWidth, fontWeight: '500', textAlign: 'right' }}
+        >
             {formatPercent(value)}
         </Text>
     );
@@ -99,11 +102,13 @@ function RightActions({
     isFavoriteRef,
     onStar,
     onBell,
+    theme,
 }: {
     prog: SharedValue<number>;
     isFavoriteRef: React.RefObject<boolean>;
     onStar: () => void;
     onBell: () => void;
+    theme: any;
 }) {
     const ACTIONS_WIDTH = 140;
     const styleAnimation = useAnimatedStyle(() => {
@@ -112,9 +117,14 @@ function RightActions({
     });
 
     return (
-        <Animated.View style={[styles.swipeActions, styleAnimation]}>
+        <Animated.View style={[{ flexDirection: 'row' }, styleAnimation]}>
             <TouchableOpacity
-                style={styles.swipeActionStar}
+                style={{
+                    backgroundColor: theme.accent.star,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 70,
+                }}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     onStar();
@@ -124,7 +134,12 @@ function RightActions({
                 <SwipeStarIcon isFavorite={isFavoriteRef.current} />
             </TouchableOpacity>
             <TouchableOpacity
-                style={styles.swipeActionBell}
+                style={{
+                    backgroundColor: theme.accent.blue,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: 70,
+                }}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     onBell();
@@ -147,6 +162,7 @@ export default function CoinRow({
     onSwipeOpen,
     onSwipeClose,
 }: Props) {
+    const theme = useTheme();
     const swipeableRef = useRef<React.ComponentRef<typeof ReanimatedSwipeable>>(null);
 
     const flashAnim = useRef(new RNAnimated.Value(0)).current;
@@ -223,10 +239,13 @@ export default function CoinRow({
                 isFavoriteRef={isFavoriteRef}
                 onStar={handleSwipeStar}
                 onBell={handleSwipeBell}
+                theme={theme}
             />
         ),
-        [], // empty — nothing inside changes
+        [theme],
     );
+
+    const styles = useMemo(() => makeStyles(theme), [theme]);
 
     return (
         <ReanimatedSwipeable
@@ -309,88 +328,33 @@ export default function CoinRow({
     );
 }
 
-const styles = StyleSheet.create({
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-        backgroundColor: theme.bg.primary,
-    },
-    left: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        flex: 1,
-        overflow: 'hidden',
-    },
-    image: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-    },
-    rank: {
-        color: theme.text.muted,
-        fontWeight: '500',
-        width: 26,
-        textAlign: 'center',
-    },
-    nameContainer: {
-        flex: 1,
-        paddingEnd: 8,
-    },
-    symbolRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    starIndicator: {
-        marginTop: 1,
-    },
-    name: {
-        color: theme.text.primary,
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    symbol: {
-        color: theme.text.secondary,
-        fontSize: 12,
-        marginTop: 2,
-    },
-    right: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    price: {
-        color: theme.text.primary,
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    percent: {
-        fontSize: 12,
-        fontWeight: '500',
-        width: 45,
-        textAlign: 'right',
-    },
-    swipeActions: {
-        flexDirection: 'row',
-    },
-    swipeActionStar: {
-        backgroundColor: '#F5A623',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 70,
-        gap: 4,
-    },
-    swipeActionBell: {
-        backgroundColor: theme.accent.blue,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 70,
-        gap: 4,
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+            backgroundColor: theme.bg.primary,
+        },
+        left: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            flex: 1,
+            overflow: 'hidden',
+        },
+        image: { width: 24, height: 24, borderRadius: 12 },
+        rank: { color: theme.text.muted, fontWeight: '500', width: 26, textAlign: 'center' },
+        nameContainer: { flex: 1, paddingEnd: 8 },
+        symbolRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+        starIndicator: { marginTop: 1 },
+        name: { color: theme.text.primary, fontSize: 15, fontWeight: '600' },
+        symbol: { color: theme.text.secondary, fontSize: 12, marginTop: 2 },
+        right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+        price: { color: theme.text.primary, fontSize: 14, fontWeight: '600' },
+    });
+}

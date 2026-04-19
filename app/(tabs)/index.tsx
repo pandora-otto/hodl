@@ -1,5 +1,5 @@
 import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { usePriceStore } from '../../store/usePriceStore';
 import { useSettingsStore, CURRENCIES } from '../../store/useSettingsStore';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import CoinRow from '../../components/CoinRow';
 import LoadingBar from '../../components/LoadingBar';
 import { CoinMarket } from '../../services/coingecko';
@@ -86,16 +86,22 @@ function ColumnHeader({
     align = 'right',
     style,
 }: ColumnHeaderProps) {
+    const theme = useTheme();
     const isActive = currentField === field;
     const arrow = isActive ? (currentDir === 'asc' ? '▲' : '▼') : '';
     return (
         <TouchableOpacity onPress={() => onPress(field)} activeOpacity={0.7}>
             <Text
                 style={[
-                    styles.label,
-                    align === 'left' ? { textAlign: 'left' } : { textAlign: 'right' },
+                    {
+                        color: theme.text.muted,
+                        fontSize: 12,
+                        fontWeight: '500',
+                        width: 45,
+                        textAlign: align,
+                    },
                     style,
-                    isActive && styles.labelActive,
+                    isActive && { color: theme.accent.blue },
                 ]}
             >
                 {label}
@@ -106,6 +112,7 @@ function ColumnHeader({
 }
 
 function SearchIcon({ focused }: { focused: boolean }) {
+    const theme = useTheme();
     const color = focused ? theme.text.primary : theme.text.secondary;
     return (
         <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill="none">
@@ -116,6 +123,7 @@ function SearchIcon({ focused }: { focused: boolean }) {
 }
 
 function FavoritesIcon({ focused, hasFavorites }: { focused: boolean; hasFavorites?: boolean }) {
+    const theme = useTheme();
     const color = focused ? theme.text.primary : theme.text.secondary;
     const fill = hasFavorites ? (focused ? '#fff' : theme.text.secondary) : 'none';
     return (
@@ -127,6 +135,9 @@ function FavoritesIcon({ focused, hasFavorites }: { focused: boolean; hasFavorit
 
 export default function WatchlistScreen() {
     const router = useRouter();
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
+
     const { fetchPrices } = usePriceFetcher();
     const { coins, hydrated, addCoin, hasCoin, removeCoin } = useWatchlistStore();
     const prices = usePriceStore((state) => state.prices);
@@ -526,118 +537,72 @@ export default function WatchlistScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.bg.primary,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingTop: 50,
-        paddingBottom: 8,
-    },
-    viewToggle: {
-        flexDirection: 'row',
-        backgroundColor: theme.bg.secondary,
-        borderRadius: 20,
-        padding: 3,
-        borderWidth: 1,
-        borderColor: theme.border,
-    },
-    toggleBtn: {
-        paddingHorizontal: 16,
-        paddingVertical: 2,
-        borderRadius: 18,
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    toggleBtnActive: {
-        backgroundColor: theme.accent.blue,
-    },
-    toggleText: {
-        color: theme.text.muted,
-        fontSize: 13,
-        fontWeight: '600',
-    },
-
-    toggleTextActive: {
-        color: '#fff',
-    },
-    columnRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        // paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    leftLabels: {
-        flexDirection: 'row',
-        gap: 6,
-    },
-    addButton: {
-        // backgroundColor: theme.accent.blue,
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        // borderRadius: 20,
-    },
-    rankLabel: {
-        color: theme.text.muted,
-        fontSize: 12,
-        fontWeight: '500',
-        width: 26,
-        textAlign: 'left',
-    },
-    labelname: {
-        color: theme.text.muted,
-        fontSize: 12,
-        fontWeight: '500',
-        textAlign: 'left',
-    },
-    rightLabels: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    label: {
-        color: theme.text.muted,
-        fontSize: 12,
-        fontWeight: '500',
-        width: 45,
-        textAlign: 'right',
-    },
-    labelActive: {
-        color: theme.accent.blue,
-    },
-    center: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    emptyTitle: {
-        color: theme.text.primary,
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    emptySubtitle: {
-        color: theme.text.muted,
-        fontSize: 14,
-        textAlign: 'center',
-        paddingHorizontal: 40,
-    },
-    muted: {
-        color: theme.text.muted,
-        fontSize: 14,
-    },
-    footer: {
-        paddingVertical: 20,
-        alignItems: 'center',
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.bg.primary },
+        header: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            paddingTop: 50,
+            paddingBottom: 8,
+        },
+        viewToggle: {
+            flexDirection: 'row',
+            backgroundColor: theme.bg.secondary,
+            borderRadius: 20,
+            padding: 3,
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        toggleBtn: {
+            paddingHorizontal: 16,
+            paddingVertical: 2,
+            borderRadius: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+        },
+        toggleBtnActive: { backgroundColor: theme.accent.blue },
+        toggleText: { color: theme.text.muted, fontSize: 13, fontWeight: '600' },
+        toggleTextActive: { color: '#fff' },
+        columnRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+        },
+        leftLabels: { flexDirection: 'row', gap: 6 },
+        addButton: { paddingHorizontal: 8, paddingVertical: 6 },
+        rankLabel: {
+            color: theme.text.muted,
+            fontSize: 12,
+            fontWeight: '500',
+            width: 26,
+            textAlign: 'left',
+        },
+        labelname: { color: theme.text.muted, fontSize: 12, fontWeight: '500', textAlign: 'left' },
+        rightLabels: { flexDirection: 'row', gap: 8 },
+        label: {
+            color: theme.text.muted,
+            fontSize: 12,
+            fontWeight: '500',
+            width: 45,
+            textAlign: 'right',
+        },
+        center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+        emptyTitle: { color: theme.text.primary, fontSize: 18, fontWeight: '600' },
+        emptySubtitle: {
+            color: theme.text.muted,
+            fontSize: 14,
+            textAlign: 'center',
+            paddingHorizontal: 40,
+        },
+        muted: { color: theme.text.muted, fontSize: 14 },
+        footer: { paddingVertical: 20, alignItems: 'center' },
+    });
+}

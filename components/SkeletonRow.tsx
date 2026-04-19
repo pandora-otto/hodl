@@ -7,7 +7,7 @@ import Animated, {
     withTiming,
     interpolate,
 } from 'react-native-reanimated';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { useSettingsStore } from '../store/useSettingsStore';
 
 function SkeletonBox({
@@ -19,6 +19,7 @@ function SkeletonBox({
     height?: number;
     borderRadius?: number;
 }) {
+    const theme = useTheme();
     const opacity = useSharedValue(0);
 
     useEffect(() => {
@@ -45,12 +46,18 @@ function SkeletonBox({
 }
 
 function SkeletonRow() {
+    const theme = useTheme();
     const display = useSettingsStore((state) => state.display);
     const activeCount = [display?.show1h, display?.show24h, display?.show7d].filter(Boolean).length;
     const percentWidth = activeCount === 1 ? 60 : activeCount === 2 ? 52 : 45;
 
     return (
-        <View style={styles.row}>
+        <View
+            style={[
+                styles.row,
+                { borderBottomColor: theme.border, backgroundColor: theme.bg.primary },
+            ]}
+        >
             {/* Left side */}
             <View style={styles.left}>
                 {/* Rank */}
@@ -97,8 +104,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 12,
         borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-        backgroundColor: theme.bg.primary,
     },
     left: {
         flexDirection: 'row',

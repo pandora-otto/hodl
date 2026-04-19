@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     View,
     Text,
@@ -12,12 +12,15 @@ import {
 import { useRouter } from 'expo-router';
 import { searchCoins, CoinSearchResult } from '../../services/coingecko';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { config } from '../../constants/config';
 import { Svg, Path } from 'react-native-svg';
 
 export default function SearchScreen() {
     const router = useRouter();
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
+
     const { addCoin, removeCoin, hasCoin, coins } = useWatchlistStore();
 
     const [query, setQuery] = useState('');
@@ -187,118 +190,61 @@ export default function SearchScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.bg.primary,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 8,
-        gap: 16,
-    },
-    back: {
-        color: theme.accent.blue,
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    title: {
-        color: theme.text.primary,
-        fontSize: 28,
-        fontWeight: 'bold',
-    },
-    searchBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.bg.secondary,
-        margin: 16,
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    input: {
-        flex: 1,
-        color: theme.text.primary,
-        fontSize: 16,
-    },
-    clearBtn: {
-        color: theme.text.muted,
-        fontSize: 16,
-        paddingLeft: 8,
-    },
-    countLabel: {
-        color: theme.text.secondary,
-        fontSize: 12,
-        paddingHorizontal: 16,
-        marginBottom: 8,
-    },
-    error: {
-        color: theme.accent.down,
-        fontSize: 13,
-        paddingHorizontal: 16,
-        marginBottom: 8,
-    },
-    item: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    itemLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        flex: 1,
-    },
-    thumb: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-    },
-    thumbPlaceholder: {
-        backgroundColor: theme.bg.secondary,
-    },
-    itemName: {
-        color: theme.text.primary,
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    itemSymbol: {
-        color: theme.text.secondary,
-        fontSize: 12,
-        marginTop: 2,
-    },
-    badge: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    badgeAdd: {
-        backgroundColor: theme.accent.blue,
-    },
-    badgeRemove: {
-        backgroundColor: theme.bg.secondary,
-        borderWidth: 1,
-        borderColor: theme.border,
-    },
-    badgeText: {
-        color: theme.text.primary,
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    center: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    secondary: {
-        color: theme.text.secondary,
-        fontSize: 15,
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.bg.primary },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingTop: 50,
+            paddingBottom: 8,
+            gap: 16,
+        },
+        title: { color: theme.text.primary, fontSize: 28, fontWeight: 'bold' },
+        searchBar: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: theme.bg.secondary,
+            margin: 16,
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        input: { flex: 1, color: theme.text.primary, fontSize: 16 },
+        clearBtn: { color: theme.text.muted, fontSize: 16, paddingLeft: 8 },
+        countLabel: {
+            color: theme.text.secondary,
+            fontSize: 12,
+            paddingHorizontal: 16,
+            marginBottom: 8,
+        },
+        error: { color: theme.accent.down, fontSize: 13, paddingHorizontal: 16, marginBottom: 8 },
+        item: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+        },
+        itemLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+        thumb: { width: 36, height: 36, borderRadius: 18 },
+        thumbPlaceholder: { backgroundColor: theme.bg.secondary },
+        itemName: { color: theme.text.primary, fontSize: 15, fontWeight: '600' },
+        itemSymbol: { color: theme.text.secondary, fontSize: 12, marginTop: 2 },
+        badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+        badgeAdd: { backgroundColor: theme.accent.blue },
+        badgeRemove: {
+            backgroundColor: theme.bg.secondary,
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        badgeText: { color: theme.text.primary, fontSize: 13, fontWeight: '600' },
+        center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+        secondary: { color: theme.text.secondary, fontSize: 15 },
+    });
+}

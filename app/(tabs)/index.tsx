@@ -124,7 +124,7 @@ function SearchIcon({ focused }: { focused: boolean }) {
 
 function FavoritesIcon({ focused, hasFavorites }: { focused: boolean; hasFavorites?: boolean }) {
     const theme = useTheme();
-    const color = focused ? theme.text.primary : theme.text.secondary;
+    const color = focused ? '#fff' : theme.text.secondary;
     const fill = hasFavorites ? (focused ? '#fff' : theme.text.secondary) : 'none';
     return (
         <Svg width={24} height={24} viewBox="0 0 24 24" stroke={color} strokeWidth="2" fill={fill}>

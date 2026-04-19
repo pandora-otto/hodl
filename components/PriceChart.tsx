@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
+import { useMemo } from 'react';
 
 interface Props {
     data: { timestamp: number; value: number }[];
@@ -18,6 +19,9 @@ interface Props {
 const { width } = Dimensions.get('window');
 
 export default function PriceChart({ data, loading, onRetry }: Props) {
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
+
     if (loading) {
         return (
             <View style={styles.placeholder}>
@@ -175,37 +179,26 @@ export default function PriceChart({ data, loading, onRetry }: Props) {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        paddingHorizontal: 16,
-        marginVertical: 8,
-    },
-    chartWrapper: {
-        height: 220,
-        justifyContent: 'center',
-    },
-    placeholder: {
-        height: 220,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 8,
-    },
-    muted: {
-        color: theme.text.muted,
-        fontSize: 14,
-    },
-    retryBtn: {
-        marginTop: 10,
-        paddingHorizontal: 20,
-        paddingVertical: 8,
-        borderRadius: 16,
-        backgroundColor: theme.bg.secondary,
-        borderWidth: 1,
-        borderColor: theme.border,
-    },
-    retryText: {
-        color: theme.accent.blue,
-        fontSize: 13,
-        fontWeight: '600',
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { paddingHorizontal: 16, marginVertical: 8 },
+        chartWrapper: { height: 220, justifyContent: 'center' },
+        placeholder: {
+            height: 220,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginVertical: 8,
+        },
+        muted: { color: theme.text.muted, fontSize: 14 },
+        retryBtn: {
+            marginTop: 10,
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 16,
+            backgroundColor: theme.bg.secondary,
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        retryText: { color: theme.accent.blue, fontSize: 13, fontWeight: '600' },
+    });
+}

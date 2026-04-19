@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Text, StyleSheet } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface Props {
     message: string;
@@ -8,6 +8,7 @@ interface Props {
 }
 
 export default function Toast({ message, visible }: Props) {
+    const theme = useTheme();
     const opacity = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(20)).current;
 
@@ -26,8 +27,18 @@ export default function Toast({ message, visible }: Props) {
     }, [visible]);
 
     return (
-        <Animated.View style={[styles.toast, { opacity, transform: [{ translateY }] }]}>
-            <Text style={styles.text}>{message}</Text>
+        <Animated.View
+            style={[
+                styles.toast,
+                {
+                    backgroundColor: theme.bg.secondary,
+                    borderColor: theme.border,
+                    opacity,
+                    transform: [{ translateY }],
+                },
+            ]}
+        >
+            <Text style={[styles.text, { color: theme.text.primary }]}>{message}</Text>
         </Animated.View>
     );
 }
@@ -37,16 +48,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 90,
         alignSelf: 'center',
-        backgroundColor: '#1e1e2e',
         borderWidth: 1,
-        borderColor: theme.border,
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 24,
         zIndex: 999,
     },
     text: {
-        color: theme.text.primary,
         fontSize: 13,
         fontWeight: '500',
     },

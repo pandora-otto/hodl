@@ -51,12 +51,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 24,
     },
-    title: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
+    title: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 12 },
     message: {
         color: '#9CA3AF',
         fontSize: 14,
@@ -70,9 +65,5 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '600',
-    },
+    buttonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

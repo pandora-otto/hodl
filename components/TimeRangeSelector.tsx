@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
+import { useMemo } from 'react';
 
 export type TimeRange = '4H' | '1' | '7' | '30' | '90' | '365' | 'max';
 
@@ -19,6 +20,9 @@ const RANGES: { label: string; value: TimeRange }[] = [
 ];
 
 export default function TimeRangeSelector({ selected, onSelect }: Props) {
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
+
     return (
         <View style={styles.container}>
             {RANGES.map((r) => (
@@ -36,29 +40,19 @@ export default function TimeRangeSelector({ selected, onSelect }: Props) {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    btn: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-    },
-    btnActive: {
-        backgroundColor: theme.accent.blue,
-    },
-    label: {
-        color: theme.text.secondary,
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    labelActive: {
-        color: '#fff',
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingBottom: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.border,
+        },
+        btn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+        btnActive: { backgroundColor: theme.accent.blue },
+        label: { color: theme.text.secondary, fontSize: 13, fontWeight: '600' },
+        labelActive: { color: '#fff' },
+    });
+}

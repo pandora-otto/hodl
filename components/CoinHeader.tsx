@@ -1,8 +1,9 @@
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { CoinMarket } from '../services/coingecko';
 import { formatPrice, formatPercent } from '../utils/formatters';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { useSettingsStore, CURRENCIES } from '../store/useSettingsStore';
+import { useMemo } from 'react';
 
 interface Props {
     coin: CoinMarket;
@@ -27,18 +28,17 @@ function rangeLabel(range: string): string {
 }
 
 export default function CoinHeader({ coin, change, low, high, loading, range }: Props) {
+    const theme = useTheme();
+    const styles = useMemo(() => makeStyles(theme), [theme]);
     const changeColor =
         change === null ? theme.text.muted : change >= 0 ? theme.accent.up : theme.accent.down;
-
     const currency = useSettingsStore((state) => state.currency);
     const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
 
     return (
         <View style={styles.container}>
             <Text style={styles.name}>{coin.name}</Text>
-
             <Text style={styles.price}>{formatPrice(coin.current_price, symbol)}</Text>
-
             {loading ? (
                 <ActivityIndicator
                     color={theme.accent.blue}
@@ -61,7 +61,6 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
                             {change !== null ? formatPercent(change) : '--'}
                         </Text>
                     </View>
-
                     <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
                         <Text style={styles.lowHigh}>
                             Low
@@ -71,7 +70,6 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
                             </Text>
                         </Text>
                     </View>
-
                     <View style={[styles.row, styles.flex, styles.flexAlignCenter]}>
                         <Text style={styles.lowHigh}>
                             High
@@ -87,44 +85,23 @@ export default function CoinHeader({ coin, change, low, high, loading, range }: 
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-    },
-    name: {
-        color: theme.text.primary,
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    row: {
-        marginBottom: 4,
-    },
-    flex: {
-        flexDirection: 'row',
-    },
-    flexAlignCenter: {
-        alignItems: 'center',
-    },
-    flexJustifyBetween: {
-        justifyContent: 'space-between',
-    },
-    flexGap8: {
-        gap: 8,
-    },
-    price: {
-        color: theme.text.primary,
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        lineHeight: 36,
-    },
-    change: {
-        fontSize: 15,
-    },
-    lowHigh: {
-        color: theme.text.secondary,
-        fontSize: 15,
-    },
-});
+function makeStyles(theme: any) {
+    return StyleSheet.create({
+        container: { paddingHorizontal: 16, paddingVertical: 10 },
+        name: { color: theme.text.primary, fontSize: 18, fontWeight: 'bold', marginBottom: 8 },
+        row: { marginBottom: 4 },
+        flex: { flexDirection: 'row' },
+        flexAlignCenter: { alignItems: 'center' },
+        flexJustifyBetween: { justifyContent: 'space-between' },
+        flexGap8: { gap: 8 },
+        price: {
+            color: theme.text.primary,
+            fontSize: 32,
+            fontWeight: 'bold',
+            marginBottom: 10,
+            lineHeight: 36,
+        },
+        change: { fontSize: 15 },
+        lowHigh: { color: theme.text.secondary, fontSize: 15 },
+    });
+}

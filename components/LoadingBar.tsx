@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet, Dimensions } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 const BAR_WIDTH = width * 0.4;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function LoadingBar({ loading }: Props) {
+    const theme = useTheme();
     const translateX = useRef(new Animated.Value(-BAR_WIDTH)).current;
     const opacity = useRef(new Animated.Value(0)).current;
     const animationRef = useRef<Animated.CompositeAnimation | null>(null);
@@ -17,12 +18,7 @@ export default function LoadingBar({ loading }: Props) {
     useEffect(() => {
         if (loading) {
             translateX.setValue(-BAR_WIDTH);
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-            }).start();
-
+            Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
             animationRef.current = Animated.loop(
                 Animated.timing(translateX, {
                     toValue: width + BAR_WIDTH,
@@ -33,13 +29,8 @@ export default function LoadingBar({ loading }: Props) {
             animationRef.current.start();
         } else {
             animationRef.current?.stop();
-            Animated.timing(opacity, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start();
+            Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
         }
-
         return () => {
             animationRef.current?.stop();
         };
@@ -47,22 +38,17 @@ export default function LoadingBar({ loading }: Props) {
 
     return (
         <View style={styles.track}>
-            <Animated.View style={[styles.bar, { transform: [{ translateX }], opacity }]} />
+            <Animated.View
+                style={[
+                    styles.bar,
+                    { backgroundColor: theme.accent.blue, transform: [{ translateX }], opacity },
+                ]}
+            />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    track: {
-        height: 2,
-        width: '100%',
-        backgroundColor: 'transparent',
-        overflow: 'hidden',
-    },
-    bar: {
-        height: 2,
-        width: BAR_WIDTH,
-        backgroundColor: theme.accent.blue,
-        borderRadius: 1,
-    },
+    track: { height: 2, width: '100%', backgroundColor: 'transparent', overflow: 'hidden' },
+    bar: { height: 2, width: BAR_WIDTH, borderRadius: 1 },
 });

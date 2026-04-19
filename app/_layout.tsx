@@ -3,8 +3,8 @@ import { Stack } from 'expo-router';
 import { useWatchlistStore } from '../store/useWatchlistStore';
 import { usePriceStore } from '../store/usePriceStore';
 import { useAlertStore } from '../store/useAlertStore';
-import { usePriceFetcher } from '../hooks/usePriceFetcher';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useTheme } from '../hooks/useTheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { registerPushToken, updateDeviceLastSeen } from '../services/pushToken';
@@ -26,6 +26,8 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 }
 
 export default function RootLayout() {
+    const theme = useTheme();
+    const themeMode = useSettingsStore((state) => state.themeMode);
     const hydrateWatchlist = useWatchlistStore((state) => state.hydrate);
     const hydratePrices = usePriceStore((state) => state.hydrate);
     const hydrateAlerts = useAlertStore((state) => state.hydrate);
@@ -33,6 +35,8 @@ export default function RootLayout() {
 
     // Configure foreground notifications
     useEffect(() => {
+        const isStoreClient = Constants.executionEnvironment === 'storeClient';
+        if (!isStoreClient) return; // skip in Expo Go
         import('expo-notifications').then((Notifications) => {
             Notifications.setNotificationHandler({
                 handleNotification: async () => ({
@@ -61,20 +65,21 @@ export default function RootLayout() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="light" />
-
+            <StatusBar style={themeMode === 'light' ? 'dark' : 'light'} />
             <Stack
                 screenOptions={{
                     headerShown: false,
-                    headerStyle: { backgroundColor: '#111827' },
-                    headerTintColor: '#fff',
-                    contentStyle: { backgroundColor: '#111827' },
+                    headerStyle: { backgroundColor: theme.bg.primary },
+                    headerTintColor: theme.text.primary,
+                    contentStyle: { backgroundColor: theme.bg.primary },
                 }}
             />
         </GestureHandlerRootView>
     );
 }
 
+// Kept hardcoded — this is a last-resort crash fallback that
+// renders when the theme system itself may have failed
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -83,12 +88,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 24,
     },
-    title: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
+    title: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 12 },
     message: {
         color: '#9CA3AF',
         fontSize: 14,
@@ -102,9 +102,5 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '600',
-    },
+    buttonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

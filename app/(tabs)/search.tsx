@@ -10,7 +10,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { searchCoins, CoinSearchResult } from '../../services/coingecko';
+import { searchCoins, CoinSearchResult, RateLimitError } from '../../services/coingecko';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useTheme } from '../../hooks/useTheme';
 import { config } from '../../constants/config';
@@ -51,7 +51,11 @@ export default function SearchScreen() {
                 const data = await searchCoins(text.trim());
                 setResults(data);
             } catch (e) {
-                setError('Search failed. Check your connection.');
+                if (e instanceof RateLimitError) {
+                    setError('Too many requests — please wait a moment and try again.');
+                } else {
+                    setError('Search failed. Check your connection.');
+                }
             } finally {
                 setLoading(false);
             }

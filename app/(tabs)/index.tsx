@@ -17,8 +17,7 @@ import { useSettingsStore, CURRENCIES } from '../../store/useSettingsStore';
 import { useTheme } from '../../hooks/useTheme';
 import CoinRow from '../../components/CoinRow';
 import LoadingBar from '../../components/LoadingBar';
-import { CoinMarket } from '../../services/coingecko';
-import { fetchTopCoins } from '../../services/coingecko';
+import { CoinMarket, fetchTopCoins, RateLimitError } from '../../services/coingecko';
 import Svg, { Line, Circle, Path } from 'react-native-svg';
 import { config } from '../../constants/config';
 import Toast from '../../components/Toast';
@@ -205,6 +204,8 @@ export default function WatchlistScreen() {
         }
     };
 
+    const [rateLimited, setRateLimited] = useState(false);
+
     // Load top coins
     const loadCoins = useCallback(
         async (pageNum: number, replace: boolean = false) => {
@@ -212,6 +213,7 @@ export default function WatchlistScreen() {
             else setLoadingMore(true);
             try {
                 const data = await fetchTopCoins(pageNum, PER_PAGE, currency);
+                setRateLimited(false); // clear any previous rate limit warning
                 if (replace) {
                     setTopCoins(data);
                 } else {
@@ -220,7 +222,11 @@ export default function WatchlistScreen() {
                 setHasMore(data.length === PER_PAGE);
                 setPage(pageNum);
             } catch (e) {
-                console.warn('Top coins fetch failed:', e);
+                if (e instanceof RateLimitError) {
+                    setRateLimited(true);
+                } else {
+                    console.warn('Top coins fetch failed:', e);
+                }
             } finally {
                 setLoadingCoins(false);
                 setLoadingMore(false);
@@ -430,6 +436,14 @@ export default function WatchlistScreen() {
                     </View>
                 )}
 
+                {rateLimited && (
+                    <View style={styles.rateLimitBanner}>
+                        <Text style={styles.rateLimitText}>
+                            ⚠️ Too many requests — retrying automatically
+                        </Text>
+                    </View>
+                )}
+
                 {/* Coins View */}
                 {view === 'coins' &&
                     (loadingCoins && topCoins.length === 0 ? (
@@ -604,5 +618,19 @@ function makeStyles(theme: any) {
         },
         muted: { color: theme.text.muted, fontSize: 14 },
         footer: { paddingVertical: 20, alignItems: 'center' },
+
+        rateLimitBanner: {
+            backgroundColor: theme.accent.star + '22',
+            borderWidth: 1,
+            borderColor: theme.accent.star,
+            margin: 12,
+            borderRadius: 12,
+            padding: 12,
+        },
+        rateLimitText: {
+            color: theme.accent.star,
+            fontSize: 13,
+            textAlign: 'center',
+        },
     });
 }

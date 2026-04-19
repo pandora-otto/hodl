@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { fetchChartData, fetchMarkets } from '../../services/coingecko';
+import { fetchChartData, fetchMarkets, RateLimitError } from '../../services/coingecko';
 import { usePriceStore } from '../../store/usePriceStore';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useTheme } from '../../hooks/useTheme';
@@ -112,7 +112,11 @@ export default function CoinDetailScreen() {
             setChartHigh(high);
             setChartChange(((last - first) / first) * 100);
         } catch (e) {
-            console.warn('Chart fetch failed:', e);
+            if (e instanceof RateLimitError) {
+                console.warn('Chart rate limited — will retry next render');
+            } else {
+                console.warn('Chart fetch failed:', e);
+            }
         } finally {
             setChartLoading(false);
         }
